@@ -251,7 +251,7 @@ export default function App() {
         <>
           <section className="hero">
             <p className="eyebrow">YOUR HEALTH, IN ONE PLACE</p>
-            <h1>Understand your health story.</h1>
+            <h1>Understand your health reports.</h1>
             <p>Keep every report together and get clear, context-aware answers whenever you need them.</p>
           </section>
           <section className={session ? 'grid' : 'guest-grid'}>
