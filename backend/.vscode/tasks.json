@@ -1,0 +1,30 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "backend-spring-run",
+			"type": "shell",
+			"command": "mvn spring-boot:run",
+			"args": [],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "backend-test-verify",
+			"type": "shell",
+			"command": "\"C:/Users/Aryan Ruthwik/OneDrive/Documents/MyFamDoctor/.tools/apache-maven-3.9.10/bin/mvn.cmd\" test -Dtest=ReportServiceTest",
+			"args": [],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "javap-healthreport",
+			"type": "shell",
+			"command": "javap -classpath target/classes -p com.healthtimeline.HealthReport",
+			"args": [],
+			"isBackground": false,
+			"group": "build"
+		}
+	]
+}
