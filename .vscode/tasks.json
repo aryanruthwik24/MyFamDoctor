@@ -2,72 +2,23 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "git-branch-check",
+			"label": "kill-node-and-clean-branch",
 			"type": "shell",
-			"command": "cd /d \"C:\\Users\\Aryan Ruthwik\\OneDrive\\Documents\\MyFamDoctor\" && git status --short --branch && echo --- && git branch --all && echo --- && git remote -v",
+			"command": "cd /d \"C:\\Users\\Aryan Ruthwik\\OneDrive\\Documents\\MyFamDoctor\" && taskkill /F /IM node.exe /T >nul 2>&1 & if exist \"frontend\\node_modules\" rmdir /s /q \"frontend\\node_modules\" & if exist \"backend\\target\" rmdir /s /q \"backend\\target\" & if exist \".vscode\" rmdir /s /q \".vscode\" & git add -A & git status --short --branch & echo --- & git commit -m \"Remove generated artifacts\" & git push --force origin clean-main:main & git status --short --branch",
 			"isBackground": false,
 			"group": "build"
 		},
 		{
-			"label": "push-clean-main-to-remote-main",
+			"label": "verify-clean-repo-state",
 			"type": "shell",
-			"command": "cd /d \"C:\\Users\\Aryan Ruthwik\\OneDrive\\Documents\\MyFamDoctor\" && git push --force origin clean-main:main && git status --short --branch",
+			"command": "cd /d \"C:\\Users\\Aryan Ruthwik\\OneDrive\\Documents\\MyFamDoctor\" && git status --short --branch && echo --- && git ls-files | findstr /I \"node_modules target .vscode\"",
 			"isBackground": false,
 			"group": "build"
 		},
 		{
-			"label": "sanitize-git-history-and-push",
+			"label": "commit-cleanup-deletions",
 			"type": "shell",
-			"command": "cd /d \"C:\\Users\\Aryan Ruthwik\\OneDrive\\Documents\\MyFamDoctor\" && git checkout --orphan temp-clean && git reset --hard && git rm -rf --cached . --ignore-unmatch && git add backend frontend README.md .gitignore && git commit -m \"Clean project with sanitized config\" && git branch -M clean-main && git push --force origin clean-main:main && git status --short --branch",
-			"isBackground": false,
-			"group": "build"
-		},
-		{
-			"label": "clean-history-force-push",
-			"type": "shell",
-			"command": "cd /d \"C:\\Users\\Aryan Ruthwik\\OneDrive\\Documents\\MyFamDoctor\" && git checkout --orphan temp-clean && git reset --hard && git rm -rf --cached . --ignore-unmatch -f && git add backend frontend README.md .gitignore && git commit -m \"Clean project with sanitized config\" && git branch -M clean-main && git push --force origin clean-main:main && git status --short --branch",
-			"isBackground": false,
-			"group": "build"
-		},
-		{
-			"label": "clear-stale-git-lock",
-			"type": "shell",
-			"command": "cd /d \"C:\\Users\\Aryan Ruthwik\\OneDrive\\Documents\\MyFamDoctor\" && if exist .git\\index.lock del /f /q .git\\index.lock && git status --short --branch",
-			"isBackground": false,
-			"group": "build"
-		},
-		{
-			"label": "commit-and-push-clean-branch",
-			"type": "shell",
-			"command": "cd /d \"C:\\Users\\Aryan Ruthwik\\OneDrive\\Documents\\MyFamDoctor\" && git add -A && git commit -m \"Clean project with sanitized config\" && git branch -M clean-main && git push --force origin clean-main:main && git status --short --branch",
-			"isBackground": false,
-			"group": "build"
-		},
-		{
-			"label": "check-git-processes",
-			"type": "shell",
-			"command": "tasklist | findstr /I \"git\"",
-			"isBackground": false,
-			"group": "build"
-		},
-		{
-			"label": "kill-stale-git-processes",
-			"type": "shell",
-			"command": "taskkill /F /IM git.exe /T",
-			"isBackground": false,
-			"group": "build"
-		},
-		{
-			"label": "delete-stale-lock-file",
-			"type": "shell",
-			"command": "cd /d \"C:\\Users\\Aryan Ruthwik\\OneDrive\\Documents\\MyFamDoctor\" && del /f /q .git\\index.lock && dir .git",
-			"isBackground": false,
-			"group": "build"
-		},
-		{
-			"label": "rewrite-and-push-clean-history",
-			"type": "shell",
-			"command": "cd /d \"C:\\Users\\Aryan Ruthwik\\OneDrive\\Documents\\MyFamDoctor\" && git status --short --branch && echo --- && git add -A && git commit -m \"Clean project with sanitized config\" && git branch -M clean-main && git push --force origin clean-main:main && git status --short --branch",
+			"command": "cd /d \"C:\\Users\\Aryan Ruthwik\\OneDrive\\Documents\\MyFamDoctor\" && git add -A && git status --short --branch && echo --- && git commit -m \"Remove generated artifacts\" && git status --short --branch",
 			"isBackground": false,
 			"group": "build"
 		}
