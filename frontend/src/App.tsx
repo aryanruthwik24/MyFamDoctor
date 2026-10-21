@@ -20,7 +20,7 @@ import './styles.css';
 const welcomeMessage: Message = {
   id: 'welcome',
   role: 'assistant',
-  content: 'Hi, I’m your report companion. Upload reports and ask me about your health timeline.',
+  content: 'Hi, I’m your report companion. Upload medical reports and ask me about your health.',
 };
 
 export default function App() {
@@ -250,9 +250,8 @@ export default function App() {
       {view === 'home' ? (
         <>
           <section className="hero">
-            <p className="eyebrow">YOUR HEALTH, IN ONE PLACE</p>
-            <h1>Understand your health reports.</h1>
-            <p>Keep every report together and get clear, context-aware answers whenever you need them.</p>
+            <p className="eyebrow">YOUR MEDICAL, IN ONE PLACE</p>
+            <h1>Understand your medical reports.</h1>
           </section>
           <section className={session ? 'grid' : 'guest-grid'}>
             {session && (

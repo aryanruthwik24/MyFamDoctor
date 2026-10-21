@@ -14,8 +14,11 @@ export function DocumentPreview({ report, onClose, onDelete, onDownload }: Docum
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true">
       <section className="document-modal">
-        <header>
-          <button className="back" onClick={onClose}><span aria-hidden="true">←</span>Back to reports</button>
+        <header className="preview-header">
+          <button className="back" onClick={onClose} aria-label="Back to reports">
+            <span aria-hidden="true">⟵</span>
+            <span>Back</span>
+          </button>
           <button className="close" onClick={onClose} aria-label="Close">×</button>
         </header>
         <div className="document-title">
@@ -35,7 +38,7 @@ export function DocumentPreview({ report, onClose, onDelete, onDownload }: Docum
           </div>
         </div>
         {(report.values?.length || report.biomarkers.length > 0) && <MetricList report={report} />}
-        <div className="document-view">{preview}</div>
+        {preview}
         {report.fileUrl && <a className="primary open-file" href={report.fileUrl} target="_blank" rel="noreferrer">Open file</a>}
       </section>
     </div>
@@ -125,7 +128,7 @@ function getPreview(report: Report) {
   if (report.mimeType === 'application/pdf' && report.fileUrl) {
     return <iframe src={report.fileUrl} title={report.title} />;
   }
-  return <div className="text-preview"><span className="empty-icon" aria-hidden="true">▤</span><h3>{report.title}</h3></div>;
+  return null;
 }
 
 function BiomarkerList({ report }: { report: Report }) {

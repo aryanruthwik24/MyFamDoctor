@@ -7,6 +7,14 @@ type ReportListProps = {
   onDownload?: (report: Report) => void | Promise<void>;
 };
 
+function truncateText(value: string, maxLength = 17): string {
+  const cleanValue = value.trim();
+  if (cleanValue.length <= maxLength) {
+    return cleanValue;
+  }
+  return `${cleanValue.slice(0, maxLength)}...`;
+}
+
 export function ReportList({ reports, onOpen, onDelete, onDownload }: ReportListProps) {
   if (!reports.length) {
     return <EmptyState />;
@@ -30,15 +38,18 @@ function EmptyState() {
 }
 
 function ReportRow({ report, onOpen, onDelete, onDownload }: { report: Report; onOpen: (report: Report) => void; onDelete?: (reportId: number) => void | Promise<void>; onDownload?: (report: Report) => void | Promise<void> }) {
+  const displayTitle = truncateText(report.title || 'Untitled report', 15);
+  const displayFileName = truncateText(report.fileName || 'report.pdf', 15);
+
   return (
     <div className="report-row">
       <button className="report-row-button" onClick={() => onOpen(report)}>
         <div className="report-icon">
           <span aria-hidden="true">{report.mimeType?.startsWith('image/') ? '▧' : '▤'}</span>
         </div>
-        <div>
-          <strong>{report.title}</strong>
-          <p>{report.type} · {report.fileName}</p>
+        <div className="report-copy">
+          <strong>{displayTitle}</strong>
+          <p>{displayFileName}</p>
         </div>
         <span className="tag">Open</span>
       </button>
