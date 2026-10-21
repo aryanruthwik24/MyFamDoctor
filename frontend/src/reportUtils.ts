@@ -19,7 +19,14 @@ export function sortReports(reports: Report[]): Report[] {
 
 function parseValuesField(rawValue: unknown): LabValue[] {
   if (Array.isArray(rawValue)) {
-    return rawValue.filter((item) => item && typeof item === 'object') as LabValue[];
+    return rawValue.filter((item) => item && typeof item === 'object').map((item) => {
+      const value = item as Record<string, unknown>;
+      const summaryValue = value.summary ?? value.test_name_summary ?? value.value_summary ?? '';
+      return {
+        ...value,
+        summary: String(summaryValue),
+      } as LabValue;
+    });
   }
 
   if (typeof rawValue !== 'string' || !rawValue.trim()) {
@@ -28,7 +35,18 @@ function parseValuesField(rawValue: unknown): LabValue[] {
 
   try {
     const parsed = JSON.parse(rawValue) as unknown;
-    return Array.isArray(parsed) ? (parsed.filter((item) => item && typeof item === 'object') as LabValue[]) : [];
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed.filter((item) => item && typeof item === 'object').map((item) => {
+      const value = item as Record<string, unknown>;
+      const summaryValue = value.summary ?? value.test_name_summary ?? value.value_summary ?? '';
+      return {
+        ...value,
+        summary: String(summaryValue),
+      } as LabValue;
+    });
   } catch {
     return [];
   }

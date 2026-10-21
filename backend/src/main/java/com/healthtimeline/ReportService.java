@@ -7,6 +7,7 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
@@ -45,7 +46,8 @@ Extract data from this medical report. Return ONLY valid JSON, no markdown:
   "values": [
     {"test_name": "", "value_num": 0.0, "value_text": null,
      "unit": "", "ref_low": null, "ref_high": null,
-     "flag": "LOW | HIGH | NORMAL | null"}
+     "flag": "LOW | HIGH | NORMAL | null",
+     "value_summary":"very short summary on what the test_name is and if its not normal give 5 foods or lifestyle changes (in bullet points) to improve it. If normal, give 5 foods or lifestyle changes(in bullet points) to maintain it."}
   ]
 }
 Do not invent anything. Use null when a field is not in the report.
@@ -91,6 +93,7 @@ Do not invent anything. Use null when a field is not in the report.
                 .toList();
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public HealthReport uploadReport(String email, MultipartFile file, String title, String reportDate, String type) throws Exception {
         if (email == null || email.isBlank()) {
             throw new IllegalStateException("Your account could not be found.");
@@ -183,7 +186,7 @@ Do not invent anything. Use null when a field is not in the report.
         // response. Otherwise the UI shows the report as uploaded before the
         // Gemini metadata is persisted to the database.
         if (isPdfFile(file.getContentType(), safeName)) {
-            enrichReportAfterUpload(saved.getId(), uploadedBytes);
+            return enrichReportAfterUpload(saved.getId(), uploadedBytes);
         }
         return saved;
     }
@@ -238,9 +241,25 @@ Do not invent anything. Use null when a field is not in the report.
         summary.put("contentType", report.getContentType());
         summary.put("summary", report.getSummary() == null ? "" : report.getSummary());
         summary.put("extractedText", report.getExtractedText() == null ? "" : report.getExtractedText());
-        summary.put("values", report.getValues() == null ? "[]" : report.getValues());
+        summary.put("values", parseValuesPayload(report.getValues()));
         summary.put("biomarkers", List.of());
         return summary;
+    }
+
+    private static Object parseValuesPayload(String valuesJson) {
+        if (valuesJson == null || valuesJson.isBlank()) {
+            return List.of();
+        }
+
+        try {
+            Object parsed = OBJECT_MAPPER.readValue(valuesJson, Object.class);
+            if (parsed instanceof List<?> list) {
+                return list;
+            }
+            return List.of();
+        } catch (Exception ignored) {
+            return List.of();
+        }
     }
 
     private boolean isPdfFile(String contentType, String fileName) {
@@ -265,8 +284,12 @@ Do not invent anything. Use null when a field is not in the report.
     }
 
     private Map<String, Object> extractMedicalReportMetadata(byte[] pdfBytes) {
-        if (pdfBytes == null || pdfBytes.length == 0 || geminiApiKey == null || geminiApiKey.isBlank()) {
-            return Map.of();
+        if (pdfBytes == null || pdfBytes.length == 0) {
+            throw new IllegalStateException("The uploaded PDF is empty.");
+        }
+
+        if (geminiApiKey == null || geminiApiKey.isBlank()) {
+            throw new IllegalStateException("Gemini API key is not configured for report enrichment.");
         }
 
         try {
@@ -292,31 +315,35 @@ Do not invent anything. Use null when a field is not in the report.
             System.out.println("[GEMINI_UPLOAD_RESPONSE] status=" + response.statusCode());
             System.out.println("[GEMINI_UPLOAD_RESPONSE_BODY] " + response.body());
             if (response.statusCode() / 100 != 2) {
-                System.err.println("LLM extraction failed with HTTP status " + response.statusCode());
-                return Map.of();
+                throw new IllegalStateException("Gemini extraction failed with HTTP status " + response.statusCode());
             }
 
-            return parseExtractionPayload(response.body());
+            Map<String, Object> parsed = parseExtractionPayload(response.body());
+            if (parsed.isEmpty()) {
+                throw new IllegalStateException("Gemini returned no usable medical metadata.");
+            }
+            return parsed;
+        } catch (IllegalStateException exception) {
+            throw exception;
         } catch (Exception exception) {
-            // Preserve the uploaded report even when the external LLM is unavailable.
-            System.err.println("LLM extraction failed: " + exception.getMessage());
-            return Map.of();
+            throw new IllegalStateException("Gemini extraction failed: " + exception.getMessage(), exception);
         }
     }
 
-    private void enrichReportAfterUpload(Long reportId, byte[] pdfBytes) {
+    private HealthReport enrichReportAfterUpload(Long reportId, byte[] pdfBytes) {
         Map<String, Object> extractedMetadata = extractMedicalReportMetadata(pdfBytes);
         if (extractedMetadata.isEmpty()) {
-            return;
+            throw new IllegalStateException("Gemini did not return any report metadata.");
         }
 
         HealthReport report = healthReportRepository.findById(reportId).orElse(null);
         if (report == null) {
-            return;
+            throw new IllegalStateException("The uploaded report record could not be found for enrichment.");
         }
 
         applyExtractionMetadata(report, extractedMetadata);
-        healthReportRepository.save(report);
+        HealthReport updated = healthReportRepository.save(report);
+        return updated;
     }
 
     private void applyExtractionMetadata(HealthReport report, Map<String, Object> extractedMetadata) {
@@ -419,6 +446,17 @@ Do not invent anything. Use null when a field is not in the report.
         target.put(fieldName, serializeJsonValue(valueNode));
     }
 
+    private static void addValueSummaryAliases(Map<String, Object> target, JsonNode root, String fieldName) {
+        if (root == null || !root.isObject() || !root.has(fieldName)) {
+            return;
+        }
+        JsonNode valueNode = root.path(fieldName);
+        if (valueNode == null || valueNode.isNull()) {
+            return;
+        }
+        target.put(fieldName, valueNode.isTextual() ? valueNode.asText() : serializeJsonValue(valueNode));
+    }
+
     private static String serializeJsonValue(Object value) {
         try {
             return OBJECT_MAPPER.writeValueAsString(value);
@@ -429,7 +467,7 @@ Do not invent anything. Use null when a field is not in the report.
 
     private static Map<String, Object> parseRawFields(String rawJson) {
         Map<String, Object> result = new LinkedHashMap<>();
-        for (String fieldName : List.of("summary", "extracted_text", "report_type", "provider_name", "values")) {
+        for (String fieldName : List.of("summary", "extracted_text", "report_type", "provider_name", "values", "value_summary")) {
             String pattern = "\\\"" + fieldName + "\\\"\\s*:\\s*(\"((?:\\\\.|[^\\\"\\\\])*)\"|\\[[\\s\\S]*?\\])";
             java.util.regex.Matcher matcher = java.util.regex.Pattern.compile(pattern).matcher(rawJson);
             if (matcher.find()) {

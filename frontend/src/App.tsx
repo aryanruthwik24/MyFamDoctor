@@ -56,6 +56,7 @@ export default function App() {
   const [authError, setAuthError] = useState('');
   const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
   const [reports, setReports] = useState<Report[]>([]);
+  const [isLoadingReports, setIsLoadingReports] = useState(false);
   const [view, setView] = useState<View>('home');
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [messages, setMessages] = useState<Message[]>([welcomeMessage]);
@@ -69,26 +70,27 @@ export default function App() {
   const saveReports = (nextReports: Report[]) => {
     const ordered = sortReports(nextReports);
     setReports(ordered);
-
   };
 
   useEffect(() => {
     if (!session) {
       setReports([]);
-      if (view === 'reports') {
-        setView('home');
-      }
+      setIsLoadingReports(false);
       return;
     }
 
+    setIsLoadingReports(true);
     setReports([]);
     fetchReports()
       .then(saveReports)
       .catch(() => {
         setReports([]);
         setError('Your account reports could not be loaded. Please sign in again.');
+      })
+      .finally(() => {
+        setIsLoadingReports(false);
       });
-  }, [session, view]);
+  }, [session]);
 
   async function handleAuthSubmit(event: FormEvent) {
     event.preventDefault();
@@ -135,20 +137,21 @@ export default function App() {
     try {
       if (!session) {
         const fileUrl = await readFileAsDataUrl(file);
-        saveReports([...reports, {
+        const newGuestReport = {
           id: Date.now(), title, reportDate, type, fileName: file.name,
           createdAt: new Date().toISOString(),
           biomarkers: [],
           mimeType: file.type || undefined,
           fileUrl,
           sourceFile: file,
-        }]);
+        };
+        setReports((current) => sortReports([...current, newGuestReport]));
         setUploadedFileName(file.name);
         return;
       }
 
       const report = await uploadReport(file, title, reportDate, type);
-      saveReports([...reports, report]);
+      setReports((current) => sortReports([...current, report]));
       setUploadedFileName(file.name);
     } catch (caughtError) {
       const message = caughtError instanceof Error ? caughtError.message : 'The report could not be uploaded.';
@@ -243,9 +246,19 @@ export default function App() {
 
   return (
     <main>
-      <Header view={view} reportCount={reports.length} userName={session?.fullName} onNavigate={setView} onOpenAuth={() => setShowAuthModal(true)} onLogout={handleLogout} />
+      <Header view={view} reportCount={reports.length} isLoadingReports={isLoadingReports} userName={session?.fullName} onNavigate={setView} onOpenAuth={() => setShowAuthModal(true)} onLogout={handleLogout} />
       <input ref={fileInputRef} type="file" accept="application/pdf,.pdf" hidden onChange={handleUpload} />
-      {error && <div className="error-banner" role="alert">{error}</div>}
+      {error && (
+        <div className="notification-bar error" role="alert" aria-live="assertive">
+          <div className="notification-content">
+            <span className="notification-icon" aria-hidden="true">!</span>
+            <span>{error}</span>
+          </div>
+          <button type="button" className="notification-close" onClick={() => setError('')} aria-label="Dismiss notification">
+            ×
+          </button>
+        </div>
+      )}
 
       {view === 'home' ? (
         <>
@@ -264,6 +277,7 @@ export default function App() {
                 onDelete={handleDeleteReport}
                 onDownload={handleDownloadReport}
                 isUploading={isUploading}
+                isLoading={isLoadingReports}
               />
             )}
             <Chat
@@ -285,7 +299,7 @@ export default function App() {
             <div><p className="eyebrow">REPORT LIBRARY</p><h1>All uploaded reports</h1></div>
             <button className="primary" onClick={openUploadDialog} disabled={isUploading}><span aria-hidden="true">↑</span>{isUploading ? 'Uploading…' : 'Upload report'}</button>
           </div>
-          <ReportList reports={visibleReports} onOpen={setSelectedReport} onDelete={handleDeleteReport} onDownload={handleDownloadReport} />
+          <ReportList reports={visibleReports} onOpen={setSelectedReport} onDelete={handleDeleteReport} onDownload={handleDownloadReport} isLoading={isLoadingReports} />
         </section>
       )}
 

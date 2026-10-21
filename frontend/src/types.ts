@@ -14,6 +14,9 @@ export type LabValue = {
   ref_low?: number | null;
   ref_high?: number | null;
   flag?: string | null;
+  summary?: string | null;
+  test_name_summary?: string | null;
+  value_summary?: string | null;
 };
 
 export type Report = {
