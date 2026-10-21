@@ -4,13 +4,14 @@ import myFamDoctorLogo from '../logo.png';
 type HeaderProps = {
   view: View;
   reportCount: number;
+  isLoadingReports?: boolean;
   userName?: string;
   onNavigate: (view: View) => void;
   onOpenAuth?: () => void;
   onLogout?: () => void;
 };
 
-export function Header({ view, reportCount, userName, onNavigate, onOpenAuth, onLogout }: HeaderProps) {
+export function Header({ view, reportCount, isLoadingReports = false, userName, onNavigate, onOpenAuth, onLogout }: HeaderProps) {
   const initials = userName ? userName.split(' ').filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? '').join('') : 'AR';
 
   return (
@@ -24,7 +25,9 @@ export function Header({ view, reportCount, userName, onNavigate, onOpenAuth, on
       {userName && (
         <nav>
           <button className={view === 'home' ? 'active' : ''} onClick={() => onNavigate('home')}>Overview</button>
-          <button className={view === 'reports' ? 'active' : ''} onClick={() => onNavigate('reports')}>Reports <b>{reportCount}</b></button>
+          <button className={view === 'reports' ? 'active' : ''} onClick={() => onNavigate('reports')}>
+            Reports{!isLoadingReports && <b>{reportCount}</b>}
+          </button>
         </nav>
       )}
       <div className="header-actions">

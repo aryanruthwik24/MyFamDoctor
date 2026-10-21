@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { dateLabel } from '../reportUtils';
 import { LabValue, Report } from '../types';
 
@@ -93,6 +94,8 @@ function getMetricRange(value: LabValue): string {
 }
 
 function MetricList({ report }: { report: Report }) {
+  const [selectedValue, setSelectedValue] = useState<LabValue | null>(null);
+
   const values = report.values?.length ? report.values : report.biomarkers.map((marker) => ({
     test_name: marker.name,
     value_text: marker.value,
@@ -100,7 +103,12 @@ function MetricList({ report }: { report: Report }) {
     flag: marker.qualifier ?? undefined,
     ref_low: undefined,
     ref_high: undefined,
+    summary: undefined,
   }));
+
+  const selectedSummary = selectedValue
+    ? (selectedValue.summary ?? selectedValue.test_name_summary ?? selectedValue.value_summary ?? '').trim()
+    : '';
 
   return (
     <section className="biomarkers">
@@ -108,15 +116,52 @@ function MetricList({ report }: { report: Report }) {
       <div className="metric-grid">
         {values.map((value, index) => {
           const status = getMetricStatus(value);
+          const key = `${getMetricLabel(value)}-${index}`;
+          const summaryText = (value.summary ?? value.test_name_summary ?? value.value_summary ?? '').trim();
+
           return (
-            <article key={`${getMetricLabel(value)}-${index}`} className={`metric-card ${status}`}>
+            <button
+              type="button"
+              key={key}
+              className={`metric-card ${status}`}
+              onClick={() => summaryText && setSelectedValue(value)}
+              aria-expanded={false}
+            >
               <span>{getMetricLabel(value)}</span>
               <strong>{getMetricValue(value)}</strong>
               <small>Normal range: {getMetricRange(value)}</small>
-            </article>
+            </button>
           );
         })}
       </div>
+
+      {selectedValue && selectedSummary && (
+        <div className="metric-summary-overlay" role="dialog" aria-modal="true" aria-label={`Summary for ${getMetricLabel(selectedValue)}`}>
+          <div className="metric-summary-panel">
+            <header className="metric-summary-header">
+              <button type="button" className="back metric-summary-back" onClick={() => setSelectedValue(null)} aria-label="Back to lab values">
+                <span aria-hidden="true">⟵</span>
+                <span>Back</span>
+              </button>
+              <button type="button" className="close metric-summary-close" onClick={() => setSelectedValue(null)} aria-label="Close summary">×</button>
+            </header>
+            <div className="metric-summary-body">
+              <div className="metric-summary-topline">
+                <div className="metric-summary-heading">
+                  <span className="metric-summary-label">{getMetricLabel(selectedValue)}</span>
+                  <span className="metric-summary-range">Normal range: {getMetricRange(selectedValue)}</span>
+                </div>
+                <strong>{getMetricValue(selectedValue)}</strong>
+              </div>
+              <div className="metric-summary-text">
+                {selectedSummary.split(/\n+/).filter(Boolean).map((paragraph, index) => (
+                  <p key={`${getMetricLabel(selectedValue)}-${index}`}>{paragraph}</p>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

@@ -2,20 +2,17 @@ import { Report } from '../types';
 
 type ReportListProps = {
   reports: Report[];
+  isLoading?: boolean;
   onOpen: (report: Report) => void;
   onDelete?: (reportId: number) => void | Promise<void>;
   onDownload?: (report: Report) => void | Promise<void>;
 };
 
-function truncateText(value: string, maxLength = 17): string {
-  const cleanValue = value.trim();
-  if (cleanValue.length <= maxLength) {
-    return cleanValue;
+export function ReportList({ reports, isLoading = false, onOpen, onDelete, onDownload }: ReportListProps) {
+  if (isLoading) {
+    return <LoadingState />;
   }
-  return `${cleanValue.slice(0, maxLength)}...`;
-}
 
-export function ReportList({ reports, onOpen, onDelete, onDownload }: ReportListProps) {
   if (!reports.length) {
     return <EmptyState />;
   }
@@ -23,6 +20,15 @@ export function ReportList({ reports, onOpen, onDelete, onDownload }: ReportList
   return (
     <div className="timeline">
       {reports.map((report) => <ReportRow key={report.id} report={report} onOpen={onOpen} onDelete={onDelete} onDownload={onDownload} />)}
+    </div>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="loading-state" role="status" aria-live="polite">
+      <span className="upload-spinner" aria-hidden="true" />
+      <p>Loading your reports…</p>
     </div>
   );
 }
@@ -38,8 +44,8 @@ function EmptyState() {
 }
 
 function ReportRow({ report, onOpen, onDelete, onDownload }: { report: Report; onOpen: (report: Report) => void; onDelete?: (reportId: number) => void | Promise<void>; onDownload?: (report: Report) => void | Promise<void> }) {
-  const displayTitle = truncateText(report.title || 'Untitled report', 15);
-  const displayFileName = truncateText(report.fileName || 'report.pdf', 15);
+  const displayTitle = report.title || 'Untitled report';
+  const displayFileName = report.fileName || 'report.pdf';
 
   return (
     <div className="report-row">
