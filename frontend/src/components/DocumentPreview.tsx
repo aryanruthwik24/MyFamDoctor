@@ -93,6 +93,10 @@ function getMetricRange(value: LabValue): string {
   return value.flag ? value.flag : 'Normal range not provided';
 }
 
+function getMetricSummary(value: LabValue): string {
+  return (value.summary ?? value.test_name_summary ?? value.value_summary ?? '').trim();
+}
+
 function MetricList({ report }: { report: Report }) {
   const [selectedValue, setSelectedValue] = useState<LabValue | null>(null);
 
@@ -104,11 +108,11 @@ function MetricList({ report }: { report: Report }) {
     ref_low: undefined,
     ref_high: undefined,
     summary: undefined,
-  }));
+    test_name_summary: undefined,
+    value_summary: undefined,
+  } satisfies LabValue));
 
-  const selectedSummary = selectedValue
-    ? (selectedValue.summary ?? selectedValue.test_name_summary ?? selectedValue.value_summary ?? '').trim()
-    : '';
+  const selectedSummary = selectedValue ? getMetricSummary(selectedValue) : '';
 
   return (
     <section className="biomarkers">
@@ -117,7 +121,7 @@ function MetricList({ report }: { report: Report }) {
         {values.map((value, index) => {
           const status = getMetricStatus(value);
           const key = `${getMetricLabel(value)}-${index}`;
-          const summaryText = (value.summary ?? value.test_name_summary ?? value.value_summary ?? '').trim();
+          const summaryText = getMetricSummary(value);
 
           return (
             <button
