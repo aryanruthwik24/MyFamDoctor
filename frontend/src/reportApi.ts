@@ -2,6 +2,8 @@ import { Report } from './types';
 import { normalizeReport } from './reportUtils';
 import { getStoredAuthSession } from './authApi';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? import.meta.env.BACKEND_URL ?? '';
+
 function getAuthHeaders(headers?: Record<string, string>) {
   const session = getStoredAuthSession();
   const nextHeaders = new Headers(headers ?? {});
@@ -11,8 +13,15 @@ function getAuthHeaders(headers?: Record<string, string>) {
   return nextHeaders;
 }
 
+function apiUrl(path: string) {
+  if (!API_BASE) {
+    return path;
+  }
+  return `${API_BASE}${path}`;
+}
+
 export async function fetchReports(): Promise<Report[]> {
-  const response = await fetch('/api/reports', { headers: getAuthHeaders() });
+  const response = await fetch(apiUrl('/api/reports'), { headers: getAuthHeaders() });
   if (!response.ok) throw new Error('Reports are unavailable.');
 
   const data: unknown = await response.json();
@@ -32,7 +41,7 @@ export async function uploadReport(file: File, title: string, reportDate: string
   form.append('reportDate', reportDate);
   form.append('type', type);
 
-  const response = await fetch('/api/reports', {
+  const response = await fetch(apiUrl('/api/reports'), {
     method: 'POST',
     body: form,
     headers: getAuthHeaders(),
@@ -57,7 +66,7 @@ export async function uploadReport(file: File, title: string, reportDate: string
 }
 
 export async function downloadReport(reportId: number, fileName: string): Promise<void> {
-  const response = await fetch(`/api/reports/${reportId}/download`, {
+  const response = await fetch(apiUrl(`/api/reports/${reportId}/download`), {
     headers: getAuthHeaders(),
   });
 
@@ -98,7 +107,7 @@ export async function downloadReport(reportId: number, fileName: string): Promis
 }
 
 export async function deleteReport(reportId: number): Promise<void> {
-  const response = await fetch(`/api/reports/${reportId}`, {
+  const response = await fetch(apiUrl(`/api/reports/${reportId}`), {
     method: 'DELETE',
     headers: getAuthHeaders(),
   });
@@ -109,7 +118,7 @@ export async function deleteReport(reportId: number): Promise<void> {
 }
 
 export async function askAboutReports(question: string, reports: Report[]): Promise<string> {
-  const response = await fetch('/api/chat', {
+  const response = await fetch(apiUrl('/api/chat'), {
     method: 'POST',
     headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({
@@ -141,7 +150,7 @@ export async function askGuestAboutReports(question: string, reports: Report[]):
     throw new Error('Upload a PDF before asking a question.');
   }
 
-  const response = await fetch('/api/chat/guest', { method: 'POST', body: form });
+  const response = await fetch(apiUrl('/api/chat/guest'), { method: 'POST', body: form });
   const data = (await response.json()) as { answer?: unknown; error?: unknown; note?: unknown };
   if (!response.ok) throw new Error(String(data.error ?? data.note ?? 'The assistant could not respond.'));
   return typeof data.answer === 'string' ? data.answer : '';

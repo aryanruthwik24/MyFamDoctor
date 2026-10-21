@@ -1,5 +1,7 @@
 import { REPORT_STORAGE_KEY } from './reportUtils';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? import.meta.env.BACKEND_URL ?? '';
+
 export type AuthSession = {
   token: string;
   fullName: string;
@@ -52,7 +54,7 @@ export async function validateAuthSession(session: AuthSession | null): Promise<
   if (!session?.token) return null;
 
   try {
-    const response = await fetch('/api/auth/me', {
+    const response = await fetch(`${API_BASE}/api/auth/me`, {
       headers: { Authorization: `Bearer ${session.token}` },
     });
 
@@ -91,7 +93,7 @@ export function clearAuthSession(): void {
 }
 
 export async function loginUser(email: string, password: string): Promise<AuthSession> {
-  const response = await fetch('/api/auth/login', {
+  const response = await fetch(`${API_BASE}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
@@ -106,7 +108,7 @@ export async function loginUser(email: string, password: string): Promise<AuthSe
 }
 
 export async function registerUser(fullName: string, email: string, password: string): Promise<AuthSession> {
-  const response = await fetch('/api/auth/register', {
+  const response = await fetch(`${API_BASE}/api/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ fullName, email, password }),
