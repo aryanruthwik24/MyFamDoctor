@@ -1,7 +1,7 @@
 {
 	"name": "MyFamDoctor",
 	"private": true,
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"description": "React frontend for the HealthTimeline application.",
 	"type": "module",
 	"scripts": {
