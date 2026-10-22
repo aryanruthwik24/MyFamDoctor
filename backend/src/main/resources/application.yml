@@ -7,6 +7,12 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:your_db_user}
     password: ${SPRING_DATASOURCE_PASSWORD:your_db_password}
     driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      idle-timeout: 30000
+      max-lifetime: 600000
+      leak-detection-threshold: 20000
   jpa:
     hibernate:
       ddl-auto: none
