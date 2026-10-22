@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Report } from '../types';
 
 type ReportListProps = {
@@ -44,8 +45,24 @@ function EmptyState() {
 }
 
 function ReportRow({ report, onOpen, onDelete, onDownload }: { report: Report; onOpen: (report: Report) => void; onDelete?: (reportId: number) => void | Promise<void>; onDownload?: (report: Report) => void | Promise<void> }) {
-  const displayTitle = report.title || 'Untitled report';
-  const displayFileName = report.fileName || 'report.pdf';
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const updateViewport = () => setIsMobile(window.innerWidth <= 650);
+    updateViewport();
+    window.addEventListener('resize', updateViewport);
+    return () => window.removeEventListener('resize', updateViewport);
+  }, []);
+
+  const truncateText = (value: string, maxLength = 15) => {
+    if (!isMobile) return value;
+    return value.length > maxLength ? `${value.slice(0, maxLength)}...` : value;
+  };
+
+  const rawTitle = report.title || 'Untitled report';
+  const displayTitle = truncateText(rawTitle);
+  const rawFileName = report.fileName || 'report.pdf';
+  const displayFileName = truncateText(rawFileName);
 
   return (
     <div className="report-row">

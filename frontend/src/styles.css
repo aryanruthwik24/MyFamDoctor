@@ -108,6 +108,10 @@ nav { order: 2; width: 100%; display: flex; justify-content: center; gap: 4px; b
 .auth-form { display: flex; flex-direction: column; gap: 16px; }
 .auth-form label { display: flex; flex-direction: column; gap: 7px; font-size: 0.9rem; color: var(--text-soft); font-weight: 600; }
 .auth-form input { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 1rem; }
+.password-input-wrap { position: relative; display: flex; align-items: center; }
+.password-input-wrap input { width: 100%; padding-right: 62px; }
+.password-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: none; background: transparent; color: var(--brand-2); font-weight: 700; font-size: 0.78rem; cursor: pointer; padding: 4px 6px; border-radius: 6px; }
+.password-toggle:hover { background: #edf8ff; }
 .auth-error { background: var(--danger-bg); border: 1px solid #efb3b3; color: var(--danger-text); padding: 10px 12px; border-radius: 10px; font-size: 0.9rem; }
 .auth-submit { width: 100%; justify-content: center; }
 .sign-in-button { border: 1px solid var(--border-strong); background: #edf9ff; color: var(--brand-2); border-radius: 9px; padding: 9px 14px; font-weight: 700; }
@@ -154,12 +158,38 @@ nav b { font-size: 10px; margin-left: 4px; background: var(--brand-4); color: va
 }
 .report-row { display: flex; align-items: center; gap: 12px; border-top: 1px solid #edf5ff; padding: 16px 10px; width: 100%; min-width: 0; }
 .report-row:hover strong { color: var(--brand-2); }
-.report-row-button { display: flex; align-items: center; gap: 12px; flex: 1; border: 0; background: transparent; padding: 4px 0; text-align: left; cursor: pointer; min-width: 0; }
-.report-row-button > .report-copy { min-width: 0; flex: 1; overflow: visible; }
-.report-icon { background: linear-gradient(135deg, var(--brand-4), #eaf6ff); padding: 9px; border-radius: 9px; color: var(--brand-2); display: grid; place-items: center; }
+.report-row-button { display: flex; align-items: center; gap: 12px; flex: 1; border: 0; background: transparent; padding: 4px 0; text-align: left; cursor: pointer; min-width: 0; overflow: hidden; }
+.report-row-button > .report-copy { min-width: 0; flex: 1 1 0%; width: 100%; overflow: hidden; }
+.report-copy strong, .report-copy p { max-width: 100%; }
+.report-icon { background: linear-gradient(135deg, var(--brand-4), #eaf6ff); padding: 9px; border-radius: 9px; color: var(--brand-2); display: grid; place-items: center; flex-shrink: 0; }
+.row-actions, .tag { flex-shrink: 0; }
 .report-row strong { display: block; font-size: 14px; color: var(--brand-3); white-space: normal; overflow: visible; text-overflow: clip; }
 .report-row p { display: block; margin: 3px 0 0; font-size: 12px; color: var(--text-muted); white-space: normal; overflow: visible; text-overflow: clip; }
+.report-row .report-copy { min-width: 0; }
 .row-actions { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; }
+
+@media (max-width: 650px) {
+  .report-row strong,
+  .report-row p {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .report-row-button {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .report-row-button > .report-copy {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: 100%;
+    max-width: calc(100% - 110px);
+    overflow: hidden;
+  }
+}
 .tag { font-size: 11px; color: var(--brand-2); background: var(--surface-soft); padding: 5px 8px; border-radius: 99px; }
 .download-button, .delete-button { border-radius: 8px; width: 27px; height: 27px; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
 .download-button { border: 1px solid #cfe9fb; background: #edf9ff; color: var(--brand-2); }
@@ -364,5 +394,5 @@ img { display: block; max-width: 100%; max-height: 62vh; }
 .text-preview p { white-space: pre-wrap; text-align: left; line-height: 1.6; }
 .open-file { text-decoration: none; }
 @media (max-width: 850px) { main { padding: 12px; } .hero { padding: 40px 7%; margin-top: 12px; } .grid { grid-template-columns: 1fr; } .chat { min-height: 480px; } }
-@media (max-width: 650px) { header { height: auto; gap: 10px; flex-wrap: wrap; } .profile { display: none; } nav { order: 3; width: 100%; justify-content: center; } .page-heading { align-items: flex-start; flex-direction: column; } .document-modal { padding: 15px; } .reports-page { padding: 18px 0; } .report-list { padding: 0 10px; } .report-row { padding: 12px 0; } .report-row strong, .report-row p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .report-row-button { padding: 0; } .report-row-button > .report-copy { overflow: hidden; } .hero { min-height: 240px; padding-top: 32px; padding-bottom: 34px; } }
+@media (max-width: 650px) { header { height: auto; gap: 10px; flex-wrap: wrap; } .profile { display: none; } nav { order: 3; width: 100%; justify-content: center; } .page-heading { align-items: flex-start; flex-direction: column; } .document-modal { padding: 15px; } .reports-page { padding: 18px 0; } .report-list { padding: 0 10px; } .report-row { padding: 12px 0; } .report-row-button { width: 100%; max-width: 100%; padding: 0; overflow: hidden; } .report-row-button > .report-copy { flex: 1 1 0%; min-width: 0; width: 100%; max-width: calc(100% - 110px); overflow: hidden; } .report-row strong, .report-row p { display: block; width: 100%; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .report-row strong { max-width: 100%; } .report-row-button > .report-copy { overflow: hidden; } .hero { min-height: 240px; padding-top: 32px; padding-bottom: 34px; } }
 @media (max-width: 430px) { main { padding: 10px; } header { padding: 0 2px; } .section-title { align-items: flex-start; flex-direction: column; } .primary { width: 100%; justify-content: center; } }

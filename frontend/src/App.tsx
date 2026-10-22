@@ -55,6 +55,7 @@ export default function App() {
   const [authForm, setAuthForm] = useState({ fullName: '', email: '', password: '' });
   const [authError, setAuthError] = useState('');
   const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoadingReports, setIsLoadingReports] = useState(false);
   const [view, setView] = useState<View>('home');
@@ -306,8 +307,15 @@ export default function App() {
       {selectedReport && <DocumentPreview report={selectedReport} onClose={() => setSelectedReport(null)} onDelete={handleDeleteReport} onDownload={handleDownloadReport} />}
 
       {showAuthModal && (
-        <div className="auth-modal-backdrop" onClick={() => setShowAuthModal(false)}>
-          <section className="auth-card" onClick={(event) => event.stopPropagation()}>
+        <div
+          className="auth-modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setShowAuthModal(false);
+            }
+          }}
+        >
+          <section className="auth-card" onMouseDown={(event) => event.stopPropagation()}>
             <div className="auth-header-row">
               <div className="auth-brand">
                 <span className="brand-mark auth-mark" aria-hidden="true">
@@ -351,12 +359,23 @@ export default function App() {
 
               <label>
                 Password
-                <input
-                  type="password"
-                  value={authForm.password}
-                  onChange={(event) => setAuthForm((current) => ({ ...current, password: event.target.value }))}
-                  placeholder="••••••••"
-                />
+                <div className="password-input-wrap">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={authForm.password}
+                    onChange={(event) => setAuthForm((current) => ({ ...current, password: event.target.value }))}
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowPassword((current) => !current)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
               </label>
 
               {authError && <div className="auth-error" role="alert">{authError}</div>}
