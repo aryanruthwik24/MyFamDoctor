@@ -23,7 +23,7 @@ export function DocumentPreview({ report, onClose, onDelete, onDownload }: Docum
             </button>
             <button className="close" onClick={onClose} aria-label="Close">×</button>
           </div>
-          <div className="header-actions">
+          <div className="document-header-actions">
             <div className="row-actions">
               {onDownload && (
                 <button type="button" className="download-button modal-download" onClick={() => onDownload(report)} aria-label={`Download ${report.title}`} title={`Download ${report.title}`}>
@@ -40,7 +40,7 @@ export function DocumentPreview({ report, onClose, onDelete, onDownload }: Docum
         </header>
         <div className="document-title">
           <div className="report-icon" aria-hidden="true">▤</div>
-          <div><p className="eyebrow">{report.type}</p><h2>{report.title}</h2><p>{dateLabel(report.reportDate)} · {report.fileName}</p></div>
+          <div><p className="eyebrow">{report.type}</p><h6 className="document-preview-title">{report.title}</h6><p className="document-preview-file">{dateLabel(report.reportDate)} · {report.fileName}</p></div>
         </div>
         {(report.values?.length || report.biomarkers.length > 0) && <MetricList report={report} />}
         {preview}
