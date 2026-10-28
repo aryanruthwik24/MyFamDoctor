@@ -26,7 +26,7 @@ public class AuthService {
             throw new IllegalArgumentException("Full name, email and password are required.");
         }
 
-        if (userRepository.findByEmail(normalizedEmail).isPresent()) {
+        if (userRepository.existsByEmail(normalizedEmail)) {
             throw new IllegalArgumentException("An account with this email already exists.");
         }
 

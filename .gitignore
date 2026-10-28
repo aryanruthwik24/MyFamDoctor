@@ -1,5 +1,7 @@
 .env
 .env.*
+frontend/.env
+frontend/.env.*
 .vscode/
 backend/target/
 backend/uploads/
