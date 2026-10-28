@@ -64,6 +64,11 @@ public class ReportController {
             return ResponseEntity.badRequest().body(Map.of("error", "The selected file is empty. Please choose a valid PDF or document."));
         }
 
+        if (file.getSize() > 1024L * 1024L) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                    .body(Map.of("error", "Uploaded report exceeds the 1MB limit. Please upload a smaller file."));
+        }
+
         if (title == null || title.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Report title is required."));
         }

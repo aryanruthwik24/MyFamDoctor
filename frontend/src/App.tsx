@@ -129,6 +129,12 @@ export default function App() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 1024 * 1024) {
+      setError('Uploaded report exceeds the 1MB limit. Please upload a smaller file.');
+      event.target.value = '';
+      return;
+    }
+
     setError('');
     setIsUploading(true);
     const title = file.name.replace(/\.[^/.]+$/, '');
@@ -179,9 +185,12 @@ export default function App() {
       setMessages((current) => [...current, {
         id: crypto.randomUUID(), role: 'assistant', content: answer || buildLocalAnswer(text, reports),
       }]);
-    } catch {
+    } catch (caughtError) {
+      const message = caughtError instanceof Error && caughtError.message
+        ? caughtError.message
+        : buildLocalAnswer(text, reports);
       setMessages((current) => [...current, {
-        id: crypto.randomUUID(), role: 'assistant', content: buildLocalAnswer(text, reports),
+        id: crypto.randomUUID(), role: 'assistant', content: message,
       }]);
     } finally {
       setIsAsking(false);

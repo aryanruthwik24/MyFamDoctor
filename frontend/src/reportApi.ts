@@ -134,7 +134,7 @@ export async function askAboutReports(question: string, reports: Report[]): Prom
   });
 
   const data = (await response.json()) as { answer?: unknown; error?: unknown; note?: unknown };
-  if (!response.ok) throw new Error(String(data.error ?? data.note ?? 'The assistant could not respond.'));
+  if (!response.ok) throw new Error(String(data.error ?? data.note ?? data.answer ?? 'The assistant could not respond.'));
   return typeof data.answer === 'string' ? data.answer : '';
 }
 
@@ -152,6 +152,6 @@ export async function askGuestAboutReports(question: string, reports: Report[]):
 
   const response = await fetch(apiUrl('/api/chat/guest'), { method: 'POST', body: form });
   const data = (await response.json()) as { answer?: unknown; error?: unknown; note?: unknown };
-  if (!response.ok) throw new Error(String(data.error ?? data.note ?? 'The assistant could not respond.'));
+  if (!response.ok) throw new Error(String(data.error ?? data.note ?? data.answer ?? 'The assistant could not respond.'));
   return typeof data.answer === 'string' ? data.answer : '';
 }

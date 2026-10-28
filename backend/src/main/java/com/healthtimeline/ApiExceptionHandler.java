@@ -16,12 +16,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<Map<String, String>> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException exception) {
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
-                .body(Map.of("error", "Uploaded file is too large. Please use a PDF under 100MB."));
+                .body(Map.of("error", "Uploaded report exceeds the 1MB limit. Please upload a smaller file."));
     }
 
     @ExceptionHandler({ FileSizeLimitExceededException.class, SizeLimitExceededException.class })
     public ResponseEntity<Map<String, String>> handleTomcatUploadLimitExceeded(Exception exception) {
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
-                .body(Map.of("error", "Uploaded file is too large. Please use a PDF under 100MB."));
+                .body(Map.of("error", "Uploaded report exceeds the 1MB limit. Please upload a smaller file."));
     }
 }

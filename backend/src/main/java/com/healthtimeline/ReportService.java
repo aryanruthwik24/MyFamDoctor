@@ -34,6 +34,8 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class ReportService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final long MAX_REPORT_UPLOAD_BYTES = 1024L * 1024L;
+    private static final String MAX_REPORT_UPLOAD_MESSAGE = "Uploaded report exceeds the 1MB limit. Please upload a smaller file.";
     private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s";
     private static final String MEDICAL_REPORT_PROMPT = """
 Extract data from this medical report. Return ONLY valid JSON, no markdown:
@@ -105,6 +107,10 @@ Do not invent anything. Use null when a field is not in the report.
 
         if (file.isEmpty()) {
             throw new IllegalArgumentException("The selected file is empty. Please choose a valid PDF or document.");
+        }
+
+        if (file.getSize() > MAX_REPORT_UPLOAD_BYTES) {
+            throw new IllegalArgumentException(MAX_REPORT_UPLOAD_MESSAGE);
         }
 
         String normalizedTitle = title == null ? "" : title.trim();

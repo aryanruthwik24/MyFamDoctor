@@ -19,7 +19,7 @@ export function ReportLibrary({ reports, total, isUploading, isLoading = false, 
       <button className="dropzone" onClick={onUpload} disabled={isUploading} aria-busy={isUploading}>
         {isUploading ? <span className="upload-spinner" aria-hidden="true" /> : <span className="upload-icon" aria-hidden="true">↑</span>}
         <strong>{isUploading ? 'Uploading report…' : 'Upload a health report'}</strong>
-        <span>{isUploading ? 'Please wait while we process your PDF.' : 'PDF, image, DOCX or TXT · saved privately in this browser'}</span>
+        <span>{isUploading ? 'Please wait while we process your PDF.' : 'PDF, image, DOCX or TXT · Max size 1MB · saved privately in this browser'}</span>
       </button>
       <div className="report-section-heading">
         <p className="eyebrow">REPORT LIBRARY</p>

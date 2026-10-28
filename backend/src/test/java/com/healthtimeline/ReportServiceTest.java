@@ -77,6 +77,37 @@ class ReportServiceTest {
     }
 
     @Test
+    void uploadReportRejectsFilesLargerThanOneMegabyte() throws Exception {
+        HealthReportRepository healthReportRepository = mock(HealthReportRepository.class);
+        UserRepository userRepository = mock(UserRepository.class);
+        PdfTextExtractor pdfTextExtractor = mock(PdfTextExtractor.class);
+        Path uploadDir = Files.createTempDirectory("report-upload-limit");
+        User user = new User("Tester", "tester@example.com", "encoded");
+        user.setEnabled(true);
+        setUserId(user, 1L);
+        when(userRepository.findByEmail("tester@example.com")).thenReturn(Optional.of(user));
+
+        ReportService service = new ReportService(
+                healthReportRepository,
+                userRepository,
+                pdfTextExtractor,
+                uploadDir.toString()
+        );
+
+        MockMultipartFile oversizedFile = new MockMultipartFile(
+                "file",
+                "large.pdf",
+                "application/pdf",
+                new byte[1024 * 1024 + 1]
+        );
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> service.uploadReport("tester@example.com", oversizedFile, "Large Sample", "2026-10-20", "LAB"));
+
+        assertEquals("Uploaded report exceeds the 1MB limit. Please upload a smaller file.", exception.getMessage());
+    }
+
+    @Test
     void uploadReportAcceptsValidPdf() throws Exception {
         HealthReportRepository healthReportRepository = mock(HealthReportRepository.class);
         UserRepository userRepository = mock(UserRepository.class);

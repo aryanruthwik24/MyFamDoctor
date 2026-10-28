@@ -93,7 +93,7 @@ public class ChatService {
      */
     public ResponseEntity<?> askGuest(String question, List<MultipartFile> files) throws Exception {
         if (geminiApiKey.isBlank()) {
-            return ResponseEntity.status(503).body(Map.of("answer", "Guest PDF questions require Gemini to be configured."));
+            return ResponseEntity.status(503).body(Map.of("error", "Guest PDF questions require Gemini to be configured."));
         }
 
         List<Map<String, Object>> parts = new ArrayList<>();
@@ -106,7 +106,7 @@ public class ChatService {
             String name = file.getOriginalFilename() == null ? "" : file.getOriginalFilename().toLowerCase();
             String contentType = file.getContentType() == null ? "" : file.getContentType().toLowerCase();
             if (!contentType.contains("pdf") && !name.endsWith(".pdf")) {
-                return ResponseEntity.badRequest().body(Map.of("answer", "Only PDF files are supported for guest questions."));
+                return ResponseEntity.badRequest().body(Map.of("error", "Only PDF files are supported for guest questions."));
             }
             parts.add(Map.of("inline_data", Map.of(
                     "mime_type", "application/pdf",
@@ -115,7 +115,7 @@ public class ChatService {
         }
 
         if (parts.size() == 1) {
-            return ResponseEntity.badRequest().body(Map.of("answer", "Upload at least one non-empty PDF before asking a question."));
+            return ResponseEntity.badRequest().body(Map.of("error", "Upload at least one non-empty PDF before asking a question."));
         }
 
         Map<String, Object> body = new LinkedHashMap<>();
@@ -128,7 +128,8 @@ public class ChatService {
                 .build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() / 100 != 2) {
-            return ResponseEntity.status(502).body(Map.of("answer", "Gemini could not answer the request. Check the API key and model configuration."));
+            String message = extractApiError(response.body(), "Gemini could not answer the request. Check the API key and model configuration.");
+            return ResponseEntity.status(502).body(Map.of("error", message));
         }
         return ResponseEntity.ok(Map.of("answer", extractGeminiAnswer(response.body())));
     }
@@ -146,7 +147,8 @@ public class ChatService {
         HttpRequest request = builder.POST(HttpRequest.BodyPublishers.ofString(body)).build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() / 100 != 2) {
-            return ResponseEntity.status(502).body(Map.of("answer", "The AI service could not answer right now."));
+            String message = extractApiError(response.body(), "The AI service could not answer right now.");
+            return ResponseEntity.status(502).body(Map.of("error", message));
         }
 
         return ResponseEntity.ok(Map.of("answer", extract(response.body())));
@@ -170,10 +172,33 @@ public class ChatService {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() / 100 != 2) {
-            return ResponseEntity.status(502).body(Map.of("answer", "Gemini could not answer the request. Check the API key and model configuration."));
+            String message = extractApiError(response.body(), "Gemini could not answer the request. Check the API key and model configuration.");
+            return ResponseEntity.status(502).body(Map.of("error", message));
         }
 
         return ResponseEntity.ok(Map.of("answer", extractGeminiAnswer(response.body())));
+    }
+
+    private static String extractApiError(String rawBody, String fallbackMessage) {
+        if (rawBody == null || rawBody.isBlank()) {
+            return fallbackMessage;
+        }
+
+        try {
+            JsonNode root = MAPPER.readTree(rawBody);
+            JsonNode errorNode = root.path("error");
+            if (errorNode.has("message") && !errorNode.path("message").asText().isBlank()) {
+                return errorNode.path("message").asText();
+            }
+            JsonNode messageNode = root.path("message");
+            if (messageNode.isTextual() && !messageNode.asText().isBlank()) {
+                return messageNode.asText();
+            }
+        } catch (Exception ignored) {
+            // Fall back to the standard message when the provider response is malformed.
+        }
+
+        return fallbackMessage;
     }
 
     public static String buildGeminiRequest(String model, String prompt, String pdfBase64) {
