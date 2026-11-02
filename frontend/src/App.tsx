@@ -1,6 +1,6 @@
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
 import myFamDoctorLogo from './logo.png';
-import { askAboutReports, askGuestAboutReports, deleteReport, downloadReport, fetchReports, uploadReport } from './reportApi';
+import { askAboutReports, askGuestAboutReports, deleteReport, fetchReports, uploadReport } from './reportApi';
 import { buildLocalAnswer } from './chatAnswers';
 import {
   getReportType,
@@ -223,29 +223,6 @@ export default function App() {
     }
   };
 
-  const handleDownloadReport = async (report: Report) => {
-    if (report.fileUrl) {
-      const link = document.createElement('a');
-      link.href = report.fileUrl;
-      link.download = report.fileName || `${report.title}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      return;
-    }
-
-    if (!session) {
-      setError('Sign in to download saved reports.');
-      return;
-    }
-
-    try {
-      await downloadReport(report.id, report.fileName || `${report.title}.pdf`);
-    } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : 'The report could not be downloaded.');
-    }
-  };
-
   const openUploadDialog = () => {
     if (isUploading) {
       return;
@@ -285,7 +262,6 @@ export default function App() {
                 onOpen={setSelectedReport}
                 onViewAll={() => setView('reports')}
                 onDelete={handleDeleteReport}
-                onDownload={handleDownloadReport}
                 isUploading={isUploading}
                 isLoading={isLoadingReports}
               />
@@ -309,11 +285,11 @@ export default function App() {
             <div><p className="eyebrow">REPORT LIBRARY</p><h1>All uploaded reports</h1></div>
             <button className="primary" onClick={openUploadDialog} disabled={isUploading}><span aria-hidden="true">↑</span>{isUploading ? 'Uploading…' : 'Upload report'}</button>
           </div>
-          <ReportList reports={visibleReports} onOpen={setSelectedReport} onDelete={handleDeleteReport} onDownload={handleDownloadReport} isLoading={isLoadingReports} />
+          <ReportList reports={visibleReports} onOpen={setSelectedReport} onDelete={handleDeleteReport} isLoading={isLoadingReports} />
         </section>
       )}
 
-      {selectedReport && <DocumentPreview report={selectedReport} onClose={() => setSelectedReport(null)} onDelete={handleDeleteReport} onDownload={handleDownloadReport} />}
+      {selectedReport && <DocumentPreview report={selectedReport} onClose={() => setSelectedReport(null)} onDelete={handleDeleteReport} />}
 
       {showAuthModal && (
         <div

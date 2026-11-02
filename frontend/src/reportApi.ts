@@ -65,47 +65,6 @@ export async function uploadReport(file: File, title: string, reportDate: string
   return normalizeReport(await response.json());
 }
 
-export async function downloadReport(reportId: number, fileName: string): Promise<void> {
-  const response = await fetch(apiUrl(`/api/reports/${reportId}/download`), {
-    headers: getAuthHeaders(),
-  });
-
-  if (!response.ok) {
-    let message = 'The report could not be downloaded.';
-    try {
-      const payload = await response.text();
-      if (payload) {
-        const parsed = JSON.parse(payload) as { error?: string; message?: string };
-        if (parsed?.error) {
-          message = parsed.error;
-        } else if (parsed?.message) {
-          message = parsed.message;
-        } else if (payload.trim() && payload.trim().length < 200) {
-          message = payload.trim();
-        }
-      }
-    } catch {
-      // Ignore JSON parse issues and keep the default message.
-    }
-
-    throw new Error(message);
-  }
-
-  const blob = await response.blob();
-  if (!blob || blob.size === 0) {
-    throw new Error('The downloaded file is empty.');
-  }
-
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName || 'report.pdf';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-}
-
 export async function deleteReport(reportId: number): Promise<void> {
   const response = await fetch(apiUrl(`/api/reports/${reportId}`), {
     method: 'DELETE',

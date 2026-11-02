@@ -6,10 +6,9 @@ type ReportListProps = {
   isLoading?: boolean;
   onOpen: (report: Report) => void;
   onDelete?: (reportId: number) => void | Promise<void>;
-  onDownload?: (report: Report) => void | Promise<void>;
 };
 
-export function ReportList({ reports, isLoading = false, onOpen, onDelete, onDownload }: ReportListProps) {
+export function ReportList({ reports, isLoading = false, onOpen, onDelete }: ReportListProps) {
   if (isLoading) {
     return <LoadingState />;
   }
@@ -20,7 +19,7 @@ export function ReportList({ reports, isLoading = false, onOpen, onDelete, onDow
 
   return (
     <div className="timeline">
-      {reports.map((report) => <ReportRow key={report.id} report={report} onOpen={onOpen} onDelete={onDelete} onDownload={onDownload} />)}
+      {reports.map((report) => <ReportRow key={report.id} report={report} onOpen={onOpen} onDelete={onDelete} />)}
     </div>
   );
 }
@@ -44,7 +43,7 @@ function EmptyState() {
   );
 }
 
-function ReportRow({ report, onOpen, onDelete, onDownload }: { report: Report; onOpen: (report: Report) => void; onDelete?: (reportId: number) => void | Promise<void>; onDownload?: (report: Report) => void | Promise<void> }) {
+function ReportRow({ report, onOpen, onDelete }: { report: Report; onOpen: (report: Report) => void; onDelete?: (reportId: number) => void | Promise<void> }) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -76,20 +75,6 @@ function ReportRow({ report, onOpen, onDelete, onDownload }: { report: Report; o
         </div>
         <span className="tag">Open</span>
       </button>
-      {onDownload && (
-        <button
-          type="button"
-          className="download-button"
-          onClick={(event) => {
-            event.stopPropagation();
-            onDownload(report);
-          }}
-          aria-label={`Download ${report.title}`}
-          title={`Download ${report.title}`}
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v9.2l3.3-3.3 1.4 1.4-5.7 5.7-5.7-5.7 1.4-1.4L11 12.7V3.5h1Zm-8 15.5h16v2H4v-2Z" fill="currentColor"/></svg>
-        </button>
-      )}
       {onDelete && (
         <button
           type="button"

@@ -12,7 +12,6 @@ public class Report {
     public LocalDate reportDate;
     public String fileName;
     public String storedFileName;
-    public String extractedText;
     public Instant createdAt = Instant.now();
     public List<Biomarker> biomarkers = new ArrayList<>();
 }

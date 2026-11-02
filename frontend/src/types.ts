@@ -27,7 +27,6 @@ export type Report = {
   fileName: string;
   createdAt: string;
   summary?: string;
-  extractedText?: string;
   fileUrl?: string;
   sourceFile?: File;
   mimeType?: string;
@@ -45,5 +44,5 @@ export type View = 'home' | 'reports';
 
 export type ReportLike = Pick<
   Report,
-  'title' | 'reportDate' | 'type' | 'extractedText' | 'biomarkers' | 'fileName' | 'createdAt' | 'fileUrl' | 'mimeType' | 'values'
+  'title' | 'reportDate' | 'type' | 'summary' | 'biomarkers' | 'fileName' | 'createdAt' | 'fileUrl' | 'mimeType' | 'values'
 >;

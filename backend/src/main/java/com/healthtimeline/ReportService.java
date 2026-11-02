@@ -44,7 +44,6 @@ Extract data from this medical report. Return ONLY valid JSON, no markdown:
   "report_date": "YYYY-MM-DD or null",
   "provider_name": "string or null",
   "summary": "3-5 line plain-language summary",
-  "extracted_text": "full text of the report",
   "values": [
     {"test_name": "", "value_num": 0.0, "value_text": null,
      "unit": "", "ref_low": null, "ref_high": null,
@@ -170,17 +169,7 @@ Do not invent anything. Use null when a field is not in the report.
             healthReport.setReportType("OTHER");
         }
         healthReport.setFileSize((long) storedBytes.length);
-        healthReport.setData(storedBytes);
         healthReport.setUploadedAt(LocalDateTime.now());
-
-        // Most digital PDFs already contain selectable text. Persist it right
-        // away so the user can ask questions without waiting for the LLM.
-        if (isPdfFile(file.getContentType(), safeName)) {
-            String embeddedText = extractEmbeddedPdfText(uploadedBytes);
-            if (!embeddedText.isBlank()) {
-                healthReport.setExtractedText(embeddedText);
-            }
-        }
 
         System.err.println("UPLOAD_DEBUG: saving HealthReport to database: userId=" + user.getId() + ", fileName=" + safeName + ", size=" + storedBytes.length);
         HealthReport saved = healthReportRepository.saveAndFlush(healthReport);
@@ -213,11 +202,6 @@ Do not invent anything. Use null when a field is not in the report.
         return report;
     }
 
-    public byte[] getReportBytes(String email, Long reportId) {
-        HealthReport report = getOwnedReport(email, reportId);
-        return report.getData();
-    }
-
     public void deleteReport(String email, Long reportId) {
         HealthReport report = getOwnedReport(email, reportId);
         healthReportRepository.delete(report);
@@ -246,7 +230,6 @@ Do not invent anything. Use null when a field is not in the report.
         summary.put("fileSize", report.getFileSize());
         summary.put("contentType", report.getContentType());
         summary.put("summary", report.getSummary() == null ? "" : report.getSummary());
-        summary.put("extractedText", report.getExtractedText() == null ? "" : report.getExtractedText());
         summary.put("values", parseValuesPayload(report.getValues()));
         summary.put("biomarkers", List.of());
         return summary;
@@ -272,21 +255,6 @@ Do not invent anything. Use null when a field is not in the report.
         String lowerContentType = contentType == null ? "" : contentType.toLowerCase();
         String lowerFileName = fileName == null ? "" : fileName.toLowerCase();
         return lowerContentType.contains("pdf") || lowerFileName.endsWith(".pdf");
-    }
-
-    private String extractEmbeddedPdfText(byte[] pdfBytes) {
-        if (pdfBytes == null || pdfBytes.length == 0) {
-            return "";
-        }
-
-        try (PDDocument document = PDDocument.load(pdfBytes)) {
-            if (document.isEncrypted()) {
-                return "";
-            }
-            return new PDFTextStripper().getText(document).trim();
-        } catch (Exception ignored) {
-            return "";
-        }
     }
 
     private Map<String, Object> extractMedicalReportMetadata(byte[] pdfBytes) {
@@ -360,16 +328,10 @@ Do not invent anything. Use null when a field is not in the report.
         String summary = extractedMetadata.get("summary") == null
                 ? ""
                 : String.valueOf(extractedMetadata.get("summary")).trim();
-        String extractedText = extractedMetadata.get("extracted_text") == null
-                ? ""
-                : String.valueOf(extractedMetadata.get("extracted_text")).trim();
         Object values = extractedMetadata.get("values");
 
         if (!summary.isBlank()) {
             report.setSummary(summary);
-        }
-        if (!extractedText.isBlank()) {
-            report.setExtractedText(extractedText);
         }
         if (values != null) {
             String valuesJson = values instanceof String
@@ -396,7 +358,6 @@ Do not invent anything. Use null when a field is not in the report.
             JsonNode root = OBJECT_MAPPER.readTree(cleaned);
             Map<String, Object> result = new LinkedHashMap<>();
             addFieldIfPresent(result, root, "summary");
-            addFieldIfPresent(result, root, "extracted_text");
             addFieldIfPresent(result, root, "report_type");
             addFieldIfPresent(result, root, "provider_name");
             addJsonArrayFieldIfPresent(result, root, "values");
@@ -473,7 +434,7 @@ Do not invent anything. Use null when a field is not in the report.
 
     private static Map<String, Object> parseRawFields(String rawJson) {
         Map<String, Object> result = new LinkedHashMap<>();
-        for (String fieldName : List.of("summary", "extracted_text", "report_type", "provider_name", "values", "value_summary")) {
+        for (String fieldName : List.of("summary", "report_type", "provider_name", "values", "value_summary")) {
             String pattern = "\\\"" + fieldName + "\\\"\\s*:\\s*(\"((?:\\\\.|[^\\\"\\\\])*)\"|\\[[\\s\\S]*?\\])";
             java.util.regex.Matcher matcher = java.util.regex.Pattern.compile(pattern).matcher(rawJson);
             if (matcher.find()) {

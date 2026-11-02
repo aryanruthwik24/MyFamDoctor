@@ -10,10 +10,9 @@ type ReportLibraryProps = {
   onOpen: (report: Report) => void;
   onViewAll: () => void;
   onDelete?: (reportId: number) => void | Promise<void>;
-  onDownload?: (report: Report) => void | Promise<void>;
 };
 
-export function ReportLibrary({ reports, total, isUploading, isLoading = false, onUpload, onOpen, onViewAll, onDelete, onDownload }: ReportLibraryProps) {
+export function ReportLibrary({ reports, total, isUploading, isLoading = false, onUpload, onOpen, onViewAll, onDelete }: ReportLibraryProps) {
   return (
     <div className="reports card">
       <button className="dropzone" onClick={onUpload} disabled={isUploading} aria-busy={isUploading}>
@@ -25,7 +24,7 @@ export function ReportLibrary({ reports, total, isUploading, isLoading = false, 
         <p className="eyebrow">REPORT LIBRARY</p>
         <h2>Health Reports</h2>
       </div>
-      <ReportList reports={reports} onOpen={onOpen} onDelete={onDelete} onDownload={onDownload} isLoading={isLoading} />
+      <ReportList reports={reports} onOpen={onOpen} onDelete={onDelete} isLoading={isLoading} />
       {total > reports.length && !isLoading && <button className="text-button" onClick={onViewAll}>View all reports →</button>}
     </div>
   );

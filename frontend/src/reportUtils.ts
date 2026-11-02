@@ -75,7 +75,6 @@ export function normalizeReport(raw: unknown): Report {
     fileName: String(value.fileName ?? ''),
     createdAt: String(value.createdAt ?? new Date().toISOString()),
     summary: value.summary ? String(value.summary) : undefined,
-    extractedText: value.extractedText ? String(value.extractedText) : undefined,
     fileUrl: value.fileUrl ? String(value.fileUrl) : undefined,
     mimeType: value.mimeType ? String(value.mimeType) : undefined,
     biomarkers,

@@ -1,6 +1,8 @@
 package com.healthtimeline;
 
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -8,6 +10,7 @@ import javax.sql.DataSource;
 
 @Component
 public class DatabaseSchemaInitializer {
+    private static final Logger log = LoggerFactory.getLogger(DatabaseSchemaInitializer.class);
     private final JdbcTemplate jdbcTemplate;
 
     public DatabaseSchemaInitializer(DataSource dataSource) {
@@ -25,8 +28,6 @@ public class DatabaseSchemaInitializer {
                 CREATE TABLE IF NOT EXISTS public.health_reports (
                     id BIGSERIAL PRIMARY KEY,
                     content_type VARCHAR(255) NOT NULL,
-                    data BYTEA NOT NULL,
-                    extracted_text TEXT,
                     file_name VARCHAR(255) NOT NULL,
                     file_size BIGINT,
                     report_date DATE,
@@ -38,13 +39,16 @@ public class DatabaseSchemaInitializer {
                 )
             """);
 
-            jdbcTemplate.execute("ALTER TABLE public.health_reports ALTER COLUMN data TYPE BYTEA USING data;");
             jdbcTemplate.execute("ALTER TABLE public.health_reports ALTER COLUMN file_name TYPE VARCHAR(255);");
             jdbcTemplate.execute("ALTER TABLE public.health_reports ALTER COLUMN content_type TYPE VARCHAR(255);");
             jdbcTemplate.execute("ALTER TABLE public.health_reports ALTER COLUMN report_type TYPE VARCHAR(255);");
             jdbcTemplate.execute("ALTER TABLE public.health_reports ADD COLUMN IF NOT EXISTS \"values\" TEXT;");
-        } catch (Exception ignored) {
-            // Best effort schema verification; avoid recursive dropping and preserve the existing production table.
+            jdbcTemplate.execute("ALTER TABLE public.health_reports DROP COLUMN IF EXISTS extracted_text;");
+            jdbcTemplate.execute("ALTER TABLE public.health_reports DROP COLUMN IF EXISTS data;");
+            log.info("Health reports schema verified: extracted_text and data columns removed if present.");
+        } catch (Exception e) {
+            log.error("Failed to verify or migrate health_reports schema. The database still has the old extracted_text column.", e);
+            throw e;
         }
     }
 }

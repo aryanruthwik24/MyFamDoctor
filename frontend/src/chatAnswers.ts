@@ -1,5 +1,5 @@
 export type Marker = { name:string; value:string; unit?:string; qualifier?:string; referenceRange?:string };
-export type ReportLike = { title?:string; reportDate?:string; type?:string; extractedText?:string; biomarkers?:Marker[]; fileName?:string; createdAt?:string; fileUrl?:string; mimeType?:string };
+export type ReportLike = { title?:string; reportDate?:string; type?:string; summary?:string; biomarkers?:Marker[]; fileName?:string; createdAt?:string; fileUrl?:string; mimeType?:string };
 
 const markerCatalog = [
   { name: 'Hemoglobin', aliases: ['hemoglobin', 'hb'] },
@@ -60,12 +60,12 @@ export function buildLocalAnswer(question: string, reports: ReportLike[]) {
       return `I found ${formatMarker(match.marker)} in ${reportLabel}.`;
     }
 
-    const extractedText = reports.map((report) => report.extractedText || '').filter(Boolean).join(' ');
-    if (extractedText && /hba1c|glycated hemoglobin|glycated haemoglobin|hemoglobin|vitamin b12|vitamin d|creatinine|egfr|cholesterol|platelet/i.test(extractedText)) {
-      return `The saved reports mention the requested biomarker, but the report parser did not persist a structured value for it yet. Please open the report preview to verify the extracted text.`;
+    const summaryText = reports.map((report) => report.summary || '').filter(Boolean).join(' ');
+    if (summaryText && /hba1c|glycated hemoglobin|glycated haemoglobin|hemoglobin|vitamin b12|vitamin d|creatinine|egfr|cholesterol|platelet/i.test(summaryText)) {
+      return `The saved reports mention the requested biomarker, but the structured value was not persisted for it yet.`;
     }
 
-    const fallbackReport = reports.find((report) => (report.extractedText || '').toLowerCase().includes(markerMatch.name.toLowerCase()) || (report.extractedText || '').toLowerCase().includes(markerMatch.aliases[0]));
+    const fallbackReport = reports.find((report) => (report.summary || '').toLowerCase().includes(markerMatch.name.toLowerCase()) || (report.summary || '').toLowerCase().includes(markerMatch.aliases[0]));
     if (fallbackReport) {
       return `I found the report text mentioning ${markerMatch.name}, but the parser did not convert it into a structured biomarker value yet.`;
     }

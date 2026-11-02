@@ -1,8 +1,6 @@
 package com.healthtimeline;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -102,41 +100,6 @@ public class ReportController {
             }
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "The report upload failed. Please try again with a valid file."));
-        }
-    }
-
-    @GetMapping("/{id}/download")
-    public ResponseEntity<?> download(@PathVariable Long id, Principal principal) {
-        if (principal == null || principal.getName() == null || principal.getName().isBlank()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        try {
-            HealthReport healthReport = reportService.getOwnedReport(principal.getName(), id);
-            byte[] fileBytes = reportService.getReportBytes(principal.getName(), id);
-            if (fileBytes == null || fileBytes.length == 0) {
-                return ResponseEntity.noContent().build();
-            }
-
-            String fileName = healthReport.getFileName() == null || healthReport.getFileName().isBlank()
-                    ? "report.pdf"
-                    : healthReport.getFileName();
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.parseMediaType(
-                    healthReport.getContentType() == null || healthReport.getContentType().isBlank()
-                            ? "application/pdf"
-                            : healthReport.getContentType()));
-            headers.setContentDisposition(ContentDisposition.attachment().filename(fileName).build());
-            headers.setContentLength(fileBytes.length);
-
-            return new ResponseEntity<>(fileBytes, headers, HttpStatus.OK);
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
-        } catch (IllegalStateException ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        } catch (SecurityException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", ex.getMessage()));
         }
     }
 

@@ -1,9 +1,7 @@
 package com.healthtimeline;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.JdbcTypeCode;
 
-import java.sql.Types;
 import java.time.LocalDateTime;
 
 @Entity
@@ -17,15 +15,6 @@ public class HealthReport {
 
     @Column(name = "content_type", nullable = false)
     private String contentType = "application/pdf";
-
-    // Bind this value as binary data. @Lob makes Hibernate use PostgreSQL's
-    // large-object OID path (a bigint), which is incompatible with BYTEA.
-    @JdbcTypeCode(Types.LONGVARBINARY)
-    @Column(name = "data", nullable = false, columnDefinition = "BYTEA")
-    private byte[] data;
-
-    @Column(name = "extracted_text", columnDefinition = "TEXT")
-    private String extractedText;
 
     @Column(name = "file_name", nullable = false)
     private String fileName;
@@ -54,12 +43,11 @@ public class HealthReport {
     public HealthReport() {
     }
 
-    public HealthReport(Long userId, String fileName, String contentType, Long fileSize, byte[] data) {
+    public HealthReport(Long userId, String fileName, String contentType, Long fileSize) {
         this.userId = userId;
         this.fileName = fileName;
         this.contentType = contentType == null || contentType.isBlank() ? "application/pdf" : contentType;
         this.fileSize = fileSize;
-        this.data = data;
     }
 
     public Long getId() {
@@ -114,14 +102,6 @@ public class HealthReport {
         this.fileSize = fileSize;
     }
 
-    public byte[] getData() {
-        return data;
-    }
-
-    public void setData(byte[] data) {
-        this.data = data;
-    }
-
     public LocalDateTime getUploadedAt() {
         return uploadedAt;
     }
@@ -144,13 +124,5 @@ public class HealthReport {
 
     public void setValues(String values) {
         this.values = values;
-    }
-
-    public String getExtractedText() {
-        return extractedText;
-    }
-
-    public void setExtractedText(String extractedText) {
-        this.extractedText = extractedText;
     }
 }

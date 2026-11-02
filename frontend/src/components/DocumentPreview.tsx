@@ -6,10 +6,9 @@ type DocumentPreviewProps = {
   report: Report;
   onClose: () => void;
   onDelete?: (reportId: number) => void | Promise<void>;
-  onDownload?: (report: Report) => void | Promise<void>;
 };
 
-export function DocumentPreview({ report, onClose, onDelete, onDownload }: DocumentPreviewProps) {
+export function DocumentPreview({ report, onClose, onDelete }: DocumentPreviewProps) {
   const preview = getPreview(report);
 
   return (
@@ -25,11 +24,6 @@ export function DocumentPreview({ report, onClose, onDelete, onDownload }: Docum
           </div>
           <div className="document-header-actions">
             <div className="row-actions">
-              {onDownload && (
-                <button type="button" className="download-button modal-download" onClick={() => onDownload(report)} aria-label={`Download ${report.title}`} title={`Download ${report.title}`}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v9.2l3.3-3.3 1.4 1.4-5.7 5.7-5.7-5.7 1.4-1.4L11 12.7V3.5h1Zm-8 15.5h16v2H4v-2Z" fill="currentColor"/></svg>
-                </button>
-              )}
               {onDelete && (
                 <button type="button" className="delete-button modal-delete" onClick={() => onDelete(report.id)} aria-label={`Delete ${report.title}`} title={`Delete ${report.title}`}>
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5A1.5 1.5 0 0 1 8.5 3h7A1.5 1.5 0 0 1 17 4.5V6h3v2h-1.5v11.5A2.5 2.5 0 0 1 15.99 22H8.01A2.5 2.5 0 0 1 5.5 19.5V8H4V6h3V4.5Zm2 1.5h6V6H9V6Zm-1.5 2v11.5c0 .28.22.5.5.5h7c.28 0 .5-.22.5-.5V8H7.5Zm2.5 2h2v7H10v-7Zm4 0h2v7h-2v-7Z" fill="currentColor"/></svg>
