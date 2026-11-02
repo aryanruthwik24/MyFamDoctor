@@ -149,7 +149,7 @@ public class ChatService {
     }
 
     private ResponseEntity<?> askGemini(String context, String question) throws Exception {
-        String prompt = "You are a careful health-report assistant. Answer only from the supplied report context. Mention when there is insufficient information. Do not diagnose, prescribe, or claim certainty. Explain medical terms plainly and advise professional care or urgent attention when appropriate. Provide the full answer in complete sentences. End with a complete final sentence and do not stop mid-thought. If the report lacks the needed information, say so plainly instead of guessing.\n\nREPORT CONTEXT:\n" + context + "\n\nUSER QUESTION: " + question;
+        String prompt = "You are a careful health-report assistant. Answer based on from the supplied report context. Mention when there is insufficient information. Explain medical terms plainly and advise professional care or urgent attention when appropriate. Provide the full answer in complete sentences. End with a complete final sentence and do not stop mid-thought. If the report lacks the needed information(any medical parameter value that donot exist), say so plainly instead of guessing.\n\nREPORT CONTEXT:\n" + context + "\n\nUSER QUESTION: " + question;
         List<Map<String, Object>> parts = new ArrayList<>();
         parts.add(Map.of("text", prompt));
 
