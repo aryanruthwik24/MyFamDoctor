@@ -26,6 +26,7 @@ export type Report = {
   type: string;
   fileName: string;
   createdAt: string;
+  summary?: string;
   extractedText?: string;
   fileUrl?: string;
   sourceFile?: File;

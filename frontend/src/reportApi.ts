@@ -123,12 +123,11 @@ export async function askAboutReports(question: string, reports: Report[]): Prom
     headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({
       question,
-      reports: reports.map(({ title, reportDate, type, extractedText, biomarkers }) => ({
+      reports: reports.map(({ title, reportDate, type, summary }) => ({
         title,
         reportDate,
         type,
-        extractedText,
-        biomarkers,
+        summary: summary?.trim() || '',
       })),
     }),
   });

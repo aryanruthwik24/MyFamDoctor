@@ -20,15 +20,15 @@ import java.util.Map;
 
 @Service
 public class ChatService {
+    public record ReportContext(String title, String reportDate, String type, String summary) {
+    }
+
     private static final int MAX_REPORT_CONTEXT_CHARACTERS = 30_000;
     private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s";
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final HealthReportRepository healthReportRepository;
     private final UserRepository userRepository;
-    private final String baseUrl;
-    private final String model;
-    private final String key;
     private final String geminiApiKey;
     private final String geminiModel;
     private final HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(20)).build();
@@ -36,62 +36,69 @@ public class ChatService {
     public ChatService(
             HealthReportRepository healthReportRepository,
             UserRepository userRepository,
-            @Value("${app.ollama-url:http://127.0.0.1:11434}") String baseUrl,
-            @Value("${app.ollama-model:qwen2.5:3b}") String model,
-            @Value("${app.ollama-api-key:}") String key,
             @Value("${app.gemini-api-key:}") String geminiApiKey,
             @Value("${app.gemini-model:gemini-3.8-flash}") String geminiModel
     ) {
         this.healthReportRepository = healthReportRepository;
         this.userRepository = userRepository;
-        this.baseUrl = baseUrl;
-        this.model = model;
-        this.key = key;
         this.geminiApiKey = geminiApiKey;
         this.geminiModel = geminiModel;
     }
 
-    public ResponseEntity<?> ask(String email, String question) throws Exception {
+    public ResponseEntity<?> ask(String email, String question, List<ReportContext> requestReports) throws Exception {
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null || user.getId() == null) {
             return ResponseEntity.status(401).body(Map.of("answer", "Your session is invalid. Please sign in again."));
         }
 
-        String context = healthReportRepository.findByUserIdOrderByUploadedAtDesc(user.getId()).stream()
+        if (geminiApiKey == null || geminiApiKey.isBlank()) {
+            return ResponseEntity.status(503).body(Map.of(
+                    "error",
+                    "Gemini is not configured. Set GEMINI_API_KEY and restart the backend before asking chat questions."
+            ));
+        }
+
+        List<ReportContext> reports = requestReports == null ? List.of() : requestReports;
+        String context = reports.stream()
                 .limit(3)
-                .map(report -> {
-                    String summary = report.getSummary() != null ? report.getSummary().trim() : "";
-                    String extracted = report.getExtractedText() != null ? report.getExtractedText().trim() : "";
-                    String body = summary.isBlank() ? extracted : summary;
-                    if (body.isBlank()) {
-                        return null;
-                    }
-
-                    String compactBody = body;
-                    if (compactBody.length() > 1800) {
-                        compactBody = compactBody.substring(0, 1800).trim() + "...";
-                    }
-
-                    return "REPORT: " + report.getFileName()
-                            + " | Date: " + report.getReportDate()
-                            + " | Type: " + report.getReportType()
-                            + "\nSUMMARY:\n" + compactBody;
-                })
+                .map(this::buildContextForReport)
                 .filter(java.util.Objects::nonNull)
                 .collect(java.util.stream.Collectors.joining("\n\n---\n\n"));
+
         if (context.length() > MAX_REPORT_CONTEXT_CHARACTERS) {
             context = context.substring(0, MAX_REPORT_CONTEXT_CHARACTERS).trim() + "...";
         }
 
         if (context.isBlank()) {
-            context = "No extracted text is available from this user's uploaded reports yet.";
+            context = "No recent report summaries were supplied with this chat request.";
         }
 
-        if (!geminiApiKey.isBlank()) {
-            return askGemini(context, question);
+        return askGemini(context, question);
+    }
+
+    private String buildContextForReport(ReportContext report) {
+        if (report == null) {
+            return null;
         }
 
-        return askOllama(context, question);
+        String body = report.summary() == null ? "" : report.summary().trim();
+        if (body.isBlank()) {
+            return null;
+        }
+
+        String compactBody = body;
+        if (compactBody.length() > 1800) {
+            compactBody = compactBody.substring(0, 1800).trim() + "...";
+        }
+
+        return "REPORT: "
+                + (report.title() == null || report.title().isBlank() ? "Untitled report" : report.title())
+                + " | Date: "
+                + (report.reportDate() == null || report.reportDate().isBlank() ? "Unknown date" : report.reportDate())
+                + " | Type: "
+                + (report.type() == null || report.type().isBlank() ? "Health report" : report.type())
+                + "\nSUMMARY:\n"
+                + compactBody;
     }
 
     /**

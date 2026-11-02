@@ -24,7 +24,7 @@ public class ChatController {
         this.chatService = chatService;
     }
 
-    record Ask(String question) {}
+    record Ask(String question, java.util.List<ChatService.ReportContext> reports) {}
 
     @PostMapping
     public ResponseEntity<?> ask(@RequestBody Ask ask, Principal principal) throws Exception {
@@ -35,7 +35,7 @@ public class ChatController {
             return ResponseEntity.status(401).body(Map.of("answer", "Please sign in before asking about reports."));
         }
 
-        return chatService.ask(principal.getName(), ask.question());
+        return chatService.ask(principal.getName(), ask.question(), ask.reports());
     }
 
     @PostMapping(value = "/guest", consumes = "multipart/form-data")
