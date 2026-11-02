@@ -60,30 +60,24 @@ class BiomarkerParserTest {
     }
 
     @Test
-    void downloadReturnsStoredBytesForTheAuthenticatedUser() {
-        ReportService reportService = mock(ReportService.class);
-        ReportController controller = new ReportController(reportService);
+    void parseExtractionPayloadIgnoresLegacyExtractedTextField() {
+        String json = """
+                {
+                  "report_type": "BLOOD_TEST",
+                  "report_date": "2026-10-01",
+                  "provider_name": "Dr. Smith",
+                  "summary": "Hemoglobin and platelet counts are within the expected range.",
+                  "values": [
+                    {"test_name": "Hemoglobin", "value_num": 14.2, "value_text": null, "unit": "g/dL", "ref_low": 12.0, "ref_high": 16.0, "flag": "NORMAL"}
+                  ]
+                }
+                """;
 
-        User user = new User();
-        org.springframework.test.util.ReflectionTestUtils.setField(user, "id", 7L);
-        user.setEmail("user@example.com");
+        var parsed = ReportController.parseExtractionPayload(json);
 
-        HealthReport healthReport = new HealthReport();
-        healthReport.setUserId(7L);
-        healthReport.setFileName("lab-report.pdf");
-        healthReport.setContentType("application/pdf");
-        healthReport.setData(new byte[] {1, 2, 3, 4});
-        healthReport.setUploadedAt(java.time.LocalDateTime.now());
-
-        when(reportService.getOwnedReport("user@example.com", 42L)).thenReturn(healthReport);
-        when(reportService.getReportBytes("user@example.com", 42L)).thenReturn(new byte[] {1, 2, 3, 4});
-
-        ResponseEntity<?> response = controller.download(42L, () -> "user@example.com");
-
-        assertEquals(200, response.getStatusCode().value());
-        assertArrayEquals(new byte[] {1, 2, 3, 4}, (byte[]) response.getBody());
-        assertEquals("attachment; filename=\"lab-report.pdf\"", response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION));
-        assertEquals("application/pdf", response.getHeaders().getFirst(HttpHeaders.CONTENT_TYPE));
+        assertEquals("Hemoglobin and platelet counts are within the expected range.", parsed.get("summary"));
+        assertFalse(parsed.containsKey("extracted_text"));
+        assertEquals("[{\"test_name\":\"Hemoglobin\",\"value_num\":14.2,\"value_text\":null,\"unit\":\"g/dL\",\"ref_low\":12.0,\"ref_high\":16.0,\"flag\":\"NORMAL\"}]", parsed.get("values"));
     }
 
     @SuppressWarnings("null")
@@ -97,7 +91,6 @@ class BiomarkerParserTest {
         savedReport.setUserId(99L);
         savedReport.setFileName("lab-report.pdf");
         savedReport.setContentType("application/pdf");
-        savedReport.setData(new byte[] {1, 2, 3, 4});
         savedReport.setUploadedAt(java.time.LocalDateTime.now());
 
         when(reportService.uploadReport(eq("upload@example.com"), any(), eq("Lab report"), eq("2026-10-02"), eq("PRESCRIPTION")))
@@ -117,14 +110,13 @@ class BiomarkerParserTest {
     }
 
     @Test
-    void parsesSummaryAndExtractedTextFromGeminiMedicalReportJson() {
+    void parsesSummaryAndValuesFromGeminiMedicalReportJson() {
         String json = """
                 {
                   "report_type": "BLOOD_TEST",
                   "report_date": "2026-10-01",
                   "provider_name": "Dr. Smith",
                   "summary": "Hemoglobin and platelet counts are within the expected range. Vitamin D is slightly low but not severe. The patient has no urgent abnormal findings in this report.",
-                  "extracted_text": "Hemoglobin 14.2 g/dL\nPlatelets 240 x10^9/L\nVitamin D 32 ng/mL",
                   "values": [
                     {"test_name": "Hemoglobin", "value_num": 14.2, "value_text": null, "unit": "g/dL", "ref_low": 12.0, "ref_high": 16.0, "flag": "NORMAL"}
                   ]
@@ -134,7 +126,8 @@ class BiomarkerParserTest {
         var parsed = ReportController.parseExtractionPayload(json);
 
         assertEquals("Hemoglobin and platelet counts are within the expected range. Vitamin D is slightly low but not severe. The patient has no urgent abnormal findings in this report.", parsed.get("summary"));
-        assertEquals("Hemoglobin 14.2 g/dL\nPlatelets 240 x10^9/L\nVitamin D 32 ng/mL", parsed.get("extracted_text"));
+        assertFalse(parsed.containsKey("extracted_text"));
+        assertEquals("[{\"test_name\":\"Hemoglobin\",\"value_num\":14.2,\"value_text\":null,\"unit\":\"g/dL\",\"ref_low\":12.0,\"ref_high\":16.0,\"flag\":\"NORMAL\"}]", parsed.get("values"));
     }
 
     @Test

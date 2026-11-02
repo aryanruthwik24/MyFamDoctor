@@ -138,11 +138,10 @@ class ReportServiceTest {
     }
 
     @Test
-    void parseExtractionPayloadPreservesGeminiValuesArray() {
+    void parseExtractionPayloadIgnoresLegacyExtractedTextField() {
         String rawJson = """
                 {
                   "summary": "Blood sugar is normal.",
-                  "extracted_text": "Patient report text",
                   "values": [
                     {"test_name": "HbA1c", "value_num": 5.6, "unit": "%", "flag": "NORMAL", "value_summary": "Keep regular meals and movement."}
                   ]
@@ -152,7 +151,7 @@ class ReportServiceTest {
         Map<String, Object> payload = ReportService.parseExtractionPayload(rawJson);
 
         assertEquals("Blood sugar is normal.", payload.get("summary"));
-        assertEquals("Patient report text", payload.get("extracted_text"));
+        assertEquals(false, payload.containsKey("extracted_text"));
         assertEquals("[{\"test_name\":\"HbA1c\",\"value_num\":5.6,\"unit\":\"%\",\"flag\":\"NORMAL\",\"value_summary\":\"Keep regular meals and movement.\"}]", payload.get("values"));
     }
 
@@ -195,7 +194,6 @@ class ReportServiceTest {
         savedReport.setContentType("application/pdf");
         savedReport.setFileSize(10L);
         savedReport.setUploadedAt(java.time.LocalDateTime.now());
-        savedReport.setData("abc".getBytes());
 
         HealthReport enrichedReport = new HealthReport();
         setUserId(enrichedReport, 99L);
@@ -204,7 +202,6 @@ class ReportServiceTest {
         enrichedReport.setContentType("application/pdf");
         enrichedReport.setFileSize(10L);
         enrichedReport.setUploadedAt(savedReport.getUploadedAt());
-        enrichedReport.setData("abc".getBytes());
         enrichedReport.setValues("[{\"test_name\":\"HbA1c\",\"value_summary\":\"Keep regular meals and movement.\"}]");
 
         when(healthReportRepository.saveAndFlush(any(HealthReport.class))).thenReturn(savedReport);
