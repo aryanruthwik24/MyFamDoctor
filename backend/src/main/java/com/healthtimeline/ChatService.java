@@ -148,26 +148,6 @@ public class ChatService {
         return ResponseEntity.ok(Map.of("answer", extractGeminiAnswer(response.body())));
     }
 
-    private ResponseEntity<?> askOllama(String context, String question) throws Exception {
-        String prompt = "You are a careful health-report assistant. Answer only from the supplied report context. State when the records do not contain the answer. Do not diagnose, prescribe, or claim certainty. Explain medical terms plainly and advise professional or urgent care when appropriate.\n\nREPORT CONTEXT:\n" + context + "\n\nUSER QUESTION: " + question;
-        String body = "{\"model\":\"" + esc(model) + "\",\"messages\":[{\"role\":\"user\",\"content\":\"" + esc(prompt) + "\"}],\"stream\":false,\"options\":{\"temperature\":0.2}}";
-
-        HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(baseUrl + "/api/chat"))
-                .header("Content-Type", "application/json");
-        if (!key.isBlank()) {
-            builder.header("Authorization", "Bearer " + key);
-        }
-
-        HttpRequest request = builder.POST(HttpRequest.BodyPublishers.ofString(body)).build();
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() / 100 != 2) {
-            String message = extractApiError(response.body(), "The AI service could not answer right now.");
-            return ResponseEntity.status(502).body(Map.of("error", message));
-        }
-
-        return ResponseEntity.ok(Map.of("answer", extract(response.body())));
-    }
-
     private ResponseEntity<?> askGemini(String context, String question) throws Exception {
         String prompt = "You are a careful health-report assistant. Answer only from the supplied report context. Mention when there is insufficient information. Do not diagnose, prescribe, or claim certainty. Explain medical terms plainly and advise professional care or urgent attention when appropriate. Provide the full answer in complete sentences. End with a complete final sentence and do not stop mid-thought. If the report lacks the needed information, say so plainly instead of guessing.\n\nREPORT CONTEXT:\n" + context + "\n\nUSER QUESTION: " + question;
         List<Map<String, Object>> parts = new ArrayList<>();
