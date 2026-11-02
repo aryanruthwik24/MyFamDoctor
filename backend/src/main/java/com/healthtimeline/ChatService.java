@@ -58,6 +58,7 @@ public class ChatService {
         }
 
         String context = healthReportRepository.findByUserIdOrderByUploadedAtDesc(user.getId()).stream()
+                .limit(3)
                 .map(report -> {
                     String summary = report.getSummary() != null ? report.getSummary().trim() : "";
                     String extracted = report.getExtractedText() != null ? report.getExtractedText().trim() : "";
@@ -65,15 +66,21 @@ public class ChatService {
                     if (body.isBlank()) {
                         return null;
                     }
+
+                    String compactBody = body;
+                    if (compactBody.length() > 1800) {
+                        compactBody = compactBody.substring(0, 1800).trim() + "...";
+                    }
+
                     return "REPORT: " + report.getFileName()
                             + " | Date: " + report.getReportDate()
                             + " | Type: " + report.getReportType()
-                            + "\nSUMMARY:\n" + body;
+                            + "\nSUMMARY:\n" + compactBody;
                 })
                 .filter(java.util.Objects::nonNull)
                 .collect(java.util.stream.Collectors.joining("\n\n---\n\n"));
         if (context.length() > MAX_REPORT_CONTEXT_CHARACTERS) {
-            context = context.substring(0, MAX_REPORT_CONTEXT_CHARACTERS);
+            context = context.substring(0, MAX_REPORT_CONTEXT_CHARACTERS).trim() + "...";
         }
 
         if (context.isBlank()) {

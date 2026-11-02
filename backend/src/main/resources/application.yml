@@ -16,6 +16,7 @@ spring:
       max-lifetime: 600000
       leak-detection-threshold: 20000
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: none
     properties:
@@ -28,7 +29,7 @@ spring:
 app:
   upload-dir: ${UPLOAD_DIR:uploads}
   gemini-api-key: ${GEMINI_API_KEY:}
-  gemini-model: ${GEMINI_MODEL:}
+  gemini-model: ${GEMINI_MODEL:gemini-3.8-flash}
   cors-origins: ${CORS_ALLOWED_ORIGINS:}
 jwt:
   secret: ${JWT_SECRET:local-dev-secret}
