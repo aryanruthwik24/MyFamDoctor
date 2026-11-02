@@ -202,6 +202,14 @@ nav b { font-size: 10px; margin-left: 4px; background: var(--brand-4); color: va
 .modal-download { background: var(--surface-soft); }
 .empty { text-align: center; padding: 28px; color: var(--text-soft); }
 .empty svg { color: #8ecae9; }
+.delete-confirm-overlay { position: fixed; inset: 0; background: rgba(15, 35, 54, 0.28); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 16px; }
+.delete-confirm-popover { width: min(360px, calc(100vw - 24px)); background: #ffffff; border: 1px solid rgba(16, 76, 121, 0.1); border-radius: 16px; box-shadow: 0 18px 40px rgba(17, 41, 63, 0.18); padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 8px; }
+.delete-confirm-popover strong { font-size: 18px; color: var(--brand-3); line-height: 1.35; }
+.delete-confirm-popover span { font-size: 13px; color: var(--text-soft); }
+.delete-confirm-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+.delete-confirm-actions button { border-radius: 10px; padding: 9px 14px; font-weight: 600; cursor: pointer; }
+.delete-confirm-actions .secondary { border: 1px solid var(--border); background: white; color: var(--text); }
+.delete-confirm-actions .danger { border: 0; background: linear-gradient(135deg, #d86d6d, #ba4040); color: white; }
 .text-button { border: 0; background: none; color: var(--brand-2); font-weight: 700; padding: 12px 0 0; }
 .chat { display: flex; flex-direction: column; min-height: 420px; }
 .bot {

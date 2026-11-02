@@ -48,7 +48,7 @@ Extract data from this medical report. Return ONLY valid JSON, no markdown:
     {"test_name": "", "value_num": 0.0, "value_text": null,
      "unit": "", "ref_low": null, "ref_high": null,
      "flag": "LOW | HIGH | NORMAL | null",
-     "value_summary":"very short summary on what the test_name is and if its not normal give 5 foods or lifestyle changes (in bullet points) to improve it. If normal, give 5 foods or lifestyle changes(in bullet points) to maintain it."}
+     "value_summary":"very short summary on what the test_name is and if its not normal give 5 foods or lifestyle changes (in bullet points) to improve it. If normal, give 5 foods or lifestyle changes(in bullet points) to maintain it with bold subheadings for definition and tips."}
   ]
 }
 Do not invent anything. Use null when a field is not in the report.

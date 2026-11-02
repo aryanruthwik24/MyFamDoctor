@@ -10,6 +10,23 @@ type DocumentPreviewProps = {
 
 export function DocumentPreview({ report, onClose, onDelete }: DocumentPreviewProps) {
   const preview = getPreview(report);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const handleDeleteClick = () => {
+    if (!onDelete) {
+      return;
+    }
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!onDelete) {
+      return;
+    }
+    await onDelete(report.id);
+    setShowDeleteConfirm(false);
+    onClose();
+  };
 
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true">
@@ -25,13 +42,25 @@ export function DocumentPreview({ report, onClose, onDelete }: DocumentPreviewPr
           <div className="document-header-actions">
             <div className="row-actions">
               {onDelete && (
-                <button type="button" className="delete-button modal-delete" onClick={() => onDelete(report.id)} aria-label={`Delete ${report.title}`} title={`Delete ${report.title}`}>
+                <button type="button" className="delete-button modal-delete" onClick={handleDeleteClick} aria-label={`Delete ${report.title}`} title={`Delete ${report.title}`}>
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5A1.5 1.5 0 0 1 8.5 3h7A1.5 1.5 0 0 1 17 4.5V6h3v2h-1.5v11.5A2.5 2.5 0 0 1 15.99 22H8.01A2.5 2.5 0 0 1 5.5 19.5V8H4V6h3V4.5Zm2 1.5h6V6H9V6Zm-1.5 2v11.5c0 .28.22.5.5.5h7c.28 0 .5-.22.5-.5V8H7.5Zm2.5 2h2v7H10v-7Zm4 0h2v7h-2v-7Z" fill="currentColor"/></svg>
                 </button>
               )}
             </div>
           </div>
         </header>
+        {showDeleteConfirm && (
+          <div className="delete-confirm-overlay" onClick={() => setShowDeleteConfirm(false)}>
+            <div className="delete-confirm-popover" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-label="Delete report confirmation">
+              <strong>Delete {report.title || report.fileName || 'this report'}</strong>
+              <span>Are you sure you want to delete this report?</span>
+              <div className="delete-confirm-actions">
+                <button type="button" className="secondary" onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
+                <button type="button" className="danger" onClick={confirmDelete}>Delete</button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="document-title">
           <div className="report-icon" aria-hidden="true">▤</div>
           <div><p className="eyebrow">{report.type}</p><h6 className="document-preview-title">{report.title}</h6><p className="document-preview-file">{dateLabel(report.reportDate)} · {report.fileName}</p></div>
