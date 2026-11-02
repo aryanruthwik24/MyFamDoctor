@@ -70,13 +70,22 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         List<String> allowedOrigins = corsOrigins == null || corsOrigins.isEmpty()
-                ? List.of("https://myfamdoctor.com", "https://www.myfamdoctor.com")
-                : corsOrigins;
+                ? List.of("http://localhost:5175", "http://127.0.0.1:5175")
+                : corsOrigins.stream()
+                        .flatMap(origin -> Arrays.stream(origin.split(",")))
+                        .map(String::trim)
+                        .filter(value -> !value.isEmpty())
+                        .toList();
+
+        if (allowedOrigins.isEmpty()) {
+            allowedOrigins = List.of("http://localhost:5175", "http://127.0.0.1:5175");
+        }
 
         configuration.setAllowedOrigins(allowedOrigins);
+        configuration.setAllowedOriginPatterns(allowedOrigins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
-        configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With", "X-CSRF-Token"));
+        configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
