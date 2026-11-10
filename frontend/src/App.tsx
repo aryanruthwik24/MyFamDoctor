@@ -15,6 +15,7 @@ import { ReportLibrary } from './components/ReportLibrary';
 import { ReportList } from './components/ReportList';
 import { Message, Report, View } from './types';
 import { clearAuthSession, getStoredAuthSession, loginUser, registerUser, saveAuthSession, validateAuthSession, AuthSession } from './authApi';
+import { Analytics } from '@vercel/analytics/react';
 import './styles.css';
 
 const welcomeMessage: Message = {
@@ -372,6 +373,7 @@ export default function App() {
           </section>
         </div>
       )}
+      <Analytics />
     </main>
   );
 }
